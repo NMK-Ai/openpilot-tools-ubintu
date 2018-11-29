@@ -35,7 +35,7 @@ Setup
     - core tools
         ```bash
         sudo apt install git curl python-pip
-        sudo pip install --upgrade pip==9.0.3
+        sudo pip install --upgrade pip>=18.0
         ```
 
     - ffmpeg (tested with 3.3.2)
