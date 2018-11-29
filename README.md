@@ -33,13 +33,14 @@ Setup
 1. Install native dependencies
 
     - core tools
-        ```
-        sudo apt install git curl
+        ```bash
+        sudo apt install git curl python-pip
+        sudo pip install --upgrade pip==9.0.3
         ```
 
     - ffmpeg (tested with 3.3.2)
         ```bash
-        sudo apt install ffmpeg
+        sudo apt install ffmpeg libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libswscale-dev libavresample-dev libavfilter-dev
         ```
 
     - build tools
@@ -116,7 +117,7 @@ Setup
     ```bash
     sudo mkdir /data
     sudo mkdir /data/params
-    sudo chown /data/params <username>   # type "whoami" to get your username
+    sudo chown $USER /data/params
     ```
 
 6. Try out some tools!
