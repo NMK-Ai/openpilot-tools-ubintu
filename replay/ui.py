@@ -548,7 +548,7 @@ def get_arg_parser():
                       help="The ip address on which to receive zmq messages.")
 
   parser.add_argument("--frame-address", default=None,
-                      help="The ip address on which to receive zmq messages.")
+                      help="The frame address (fully qualified ZMQ endpoint for frames) on which to receive zmq messages.")
   return parser
 
 if __name__ == "__main__":
