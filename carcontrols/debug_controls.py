@@ -13,29 +13,28 @@ from selfdrive.car.car_helpers import get_car
 def steer_thread():
   context = zmq.Context()
   poller = zmq.Poller()
-  sendcan = messaging.pub_sock(context, service_list['sendcan'].port)
+
   logcan = messaging.sub_sock(context, service_list['can'].port)
   joystick_sock = messaging.sub_sock(context, service_list['testJoystick'].port, conflate=True, poller=poller)
 
   carstate = messaging.pub_sock(context, service_list['carState'].port)
   carcontrol = messaging.pub_sock(context, service_list['carControl'].port)
-  
+  sendcan = messaging.pub_sock(context, service_list['sendcan'].port)
+
   button_1_last = 0
   enabled = False
-  
+
   CI, CP = get_car(logcan, sendcan, None)
 
   CC = car.CarControl.new_message()
   joystick = messaging.recv_one(joystick_sock)
 
   while True:
-    
+
     # send
     for socket, event in poller.poll(0):
       if socket is joystick_sock:
         joystick = messaging.recv_one(socket)
-        gas = max(joystick.testJoystick.axes[0], 0.)
-
 
     CS = CI.update(CC)
 
