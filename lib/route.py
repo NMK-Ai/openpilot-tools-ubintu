@@ -6,8 +6,8 @@ SEGMENT_NAME_RE = r'[a-z0-9]{16}[|_][0-9]{4}-[0-9]{2}-[0-9]{2}--[0-9]{2}-[0-9]{2
 EXPLORER_FILE_RE = r'^({})--([a-z]+\.[a-z0-9]+)$'.format(SEGMENT_NAME_RE)
 OP_SEGMENT_DIR_RE = r'^({})$'.format(SEGMENT_NAME_RE)
 
-LOG_FILENAMES = ['rlog.bz2', 'log2.gz', 'ilog.7z']
-CAMERA_FILENAMES = ['fcamera.hevc', 'acamera', 'icamera']
+LOG_FILENAMES = ['rlog.bz2', 'raw_log.bz2', 'log2.gz', 'ilog.7z']
+CAMERA_FILENAMES = ['fcamera.hevc', 'video.hevc', 'acamera', 'icamera']
 
 class Route(object):
   def __init__(self, route_name, data_dir):
@@ -22,11 +22,11 @@ class Route(object):
     max_seg_number = self._segments[-1].canonical_name.segment_num
     log_path_by_seg_num = {s.canonical_name.segment_num: s.log_path for s in self._segments}
     return [log_path_by_seg_num.get(i, None) for i in xrange(max_seg_number+1)]
-  
+
   def camera_paths(self):
     max_seg_number = self._segments[-1].canonical_name.segment_num
     camera_path_by_seg_num = {s.canonical_name.segment_num: s.camera_path for s in self._segments}
-    return [camera_path_by_seg_num.get(i, None) for i in xrange(max_seg_number+1)] 
+    return [camera_path_by_seg_num.get(i, None) for i in xrange(max_seg_number+1)]
 
   def _get_segments(self, data_dir):
     files = os.listdir(data_dir)
@@ -36,15 +36,24 @@ class Route(object):
       fullpath = os.path.join(data_dir, f)
       explorer_match = re.match(EXPLORER_FILE_RE, f)
       op_match = re.match(OP_SEGMENT_DIR_RE, f)
+
       if explorer_match:
         segment_name, fn = explorer_match.groups()
         if segment_name.replace('_', '|').startswith(self.route_name):
           segment_files[segment_name].append((fullpath, fn))
-      if op_match and os.path.isdir(fullpath):
+      elif op_match and os.path.isdir(fullpath):
         segment_name, = op_match.groups()
         if segment_name.startswith(self.route_name):
           for seg_f in os.listdir(fullpath):
             segment_files[segment_name].append((os.path.join(fullpath, seg_f), seg_f))
+      elif f == self.route_name:
+        for seg_num in os.listdir(fullpath):
+          if not seg_num.isdigit():
+            continue
+
+          segment_name = '{}--{}'.format(self.route_name, seg_num)
+          for seg_f in os.listdir(os.path.join(fullpath, seg_num)):
+            segment_files[segment_name].append((os.path.join(fullpath, seg_num, seg_f), seg_f))
 
     segments = []
     for segment, files in segment_files.iteritems():
@@ -59,7 +68,7 @@ class Route(object):
         camera_path = None
 
       segments.append(RouteSegment(segment, log_path, camera_path))
-    
+
     if len(segments) == 0:
       raise ValueError('Could not find segments for route {} in data directory {}'.format(self.route_name, data_dir))
     return sorted(segments, key=lambda seg: seg.name)
@@ -75,7 +84,7 @@ class RouteSegment(object):
 
   @property
   def canonical_name(self): return self._name
-    
+
 class RouteSegmentName(object):
   def __init__(self, name_str):
     self._segment_name_str = name_str
@@ -84,5 +93,5 @@ class RouteSegmentName(object):
 
   @property
   def segment_num(self): return self._num
-  
+
   def __str__(self): return self._segment_name_str
