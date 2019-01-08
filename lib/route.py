@@ -71,7 +71,7 @@ class Route(object):
 
     if len(segments) == 0:
       raise ValueError('Could not find segments for route {} in data directory {}'.format(self.route_name, data_dir))
-    return sorted(segments, key=lambda seg: seg.name)
+    return sorted(segments, key=lambda seg: seg.canonical_name.segment_num)
 
 class RouteSegment(object):
   def __init__(self, name, log_path, camera_path):
