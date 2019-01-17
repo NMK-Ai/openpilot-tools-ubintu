@@ -63,7 +63,7 @@ Setup
         curl -O https://capnproto.org/capnproto-c++-0.6.1.tar.gz
         tar xvf capnproto-c++-0.6.1.tar.gz
         cd capnproto-c++-0.6.1
-        ./configure --prefix=/usr CPPFLAGS=-DPIC CFLAGS=-fPIC CXXFLAGS=-fPIC LDFLAGS=-fPIC --disable-shared --enable-static
+        ./configure --prefix=/usr/local CPPFLAGS=-DPIC CFLAGS=-fPIC CXXFLAGS=-fPIC LDFLAGS=-fPIC --disable-shared --enable-static
         make -j4
         sudo make install
 
@@ -86,6 +86,15 @@ Setup
         ./configure CPPFLAGS=-DPIC CFLAGS=-fPIC CXXFLAGS=-fPIC LDFLAGS=-fPIC --disable-shared --enable-static
         make
         sudo make install
+        ```
+
+    - czmq 4.0.2 (required for visiontest)
+        ```
+        curl -LO https://github.com/zeromq/czmq/releases/download/v4.0.2/czmq-4.0.2.tar.gz
+        tar xfz czmq-4.0.2.tar.gz
+        cd czmq-4.0.2
+        ./configure --prefix=/usr/local
+        sudo make -j4 install
         ```
 
 2. Clone openpilot if you haven't already
