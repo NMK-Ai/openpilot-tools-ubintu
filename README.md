@@ -88,15 +88,6 @@ Setup
         sudo make install
         ```
 
-    - czmq 4.0.2 (required for visiontest)
-        ```
-        curl -LO https://github.com/zeromq/czmq/releases/download/v4.0.2/czmq-4.0.2.tar.gz
-        tar xfz czmq-4.0.2.tar.gz
-        cd czmq-4.0.2
-        ./configure --prefix=/usr/local
-        sudo make -j4 install
-        ```
-
 2. Clone openpilot if you haven't already
 
     ```bash
