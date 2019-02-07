@@ -16,8 +16,7 @@ from selfdrive.config import UIParams as UP
 from selfdrive.services import service_list
 from selfdrive.controls.lib.radar_helpers import RDR_TO_LDR
 from selfdrive.controls.lib.vehicle_model import VehicleModel
-from selfdrive.controls.lib.pathplanner import calc_desired_path, \
-                                               compute_path_pinv, model_polyfit
+from selfdrive.controls.lib.latcontrol_helpers import calc_desired_path, compute_path_pinv, model_polyfit
 from openpilot_tools.lib.lazy_property import lazy_property
 from openpilot_tools.replay.lib.ui_helpers import to_lid_pt, draw_path, draw_steer_path, draw_mpc, \
                                                   draw_lead_car, draw_lead_on, init_plots, warp_points, find_color
