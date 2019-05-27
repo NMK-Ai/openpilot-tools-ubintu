@@ -234,9 +234,9 @@ def ui_thread(addr, frame_address):
   carState = sub_sock(context, service_list['carState'].port, addr=addr, conflate=True)
   plan = sub_sock(context, service_list['plan'].port, addr=addr, conflate=True)
   carControl = sub_sock(context, service_list['carControl'].port, addr=addr, conflate=True)
-  live20 = sub_sock(context, service_list['live20'].port, addr=addr, conflate=True)
+  radar_state_sock = sub_sock(context, service_list['radarState'].port, addr=addr, conflate=True)
   liveCalibration = sub_sock(context, service_list['liveCalibration'].port, addr=addr, conflate=True)
-  live100 = sub_sock(context, service_list['live100'].port, addr=addr, conflate=True)
+  controls_state_sock = sub_sock(context, service_list['controlsState'].port, addr=addr, conflate=True)
   liveTracks = sub_sock(context, service_list['liveTracks'].port, addr=addr, conflate=True)
   model = sub_sock(context, service_list['model'].port, addr=addr, conflate=True)
   test_model = sub_sock(context, 8040, addr=addr, conflate=True)
@@ -365,18 +365,18 @@ def ui_thread(addr, frame_address):
     imgw_test_model = imgw.copy()
 
 
-    # ***** live100 *****
-    l100 = recv_one_or_none(live100)
-    if l100 is not None:
-      v_ego = l100.live100.vEgo
-      angle_steers = l100.live100.angleSteers
-      model_bias = l100.live100.angleModelBias
-      curvature = l100.live100.curvature
-      v_pid = l100.live100.vPid
-      enabled = l100.live100.enabled
-      alert_text1 = l100.live100.alertText1
-      alert_text2 = l100.live100.alertText2
-      long_control_state = l100.live100.longControlState
+    # ***** controlsState *****
+    controls_state = recv_one_or_none(controls_state_sock)
+    if controls_state is not None:
+      v_ego = controls_state.controlsState.vEgo
+      angle_steers = controls_state.controlsState.angleSteers
+      model_bias = controls_state.controlsState.angleModelBias
+      curvature = controls_state.controlsState.curvature
+      v_pid = controls_state.controlsState.vPid
+      enabled = controls_state.controlsState.enabled
+      alert_text1 = controls_state.controlsState.alertText1
+      alert_text2 = controls_state.controlsState.alertText2
+      long_control_state = controls_state.controlsState.longControlState
 
     cs = recv_one_or_none(carState)
     if cs is not None:
@@ -448,6 +448,7 @@ def ui_thread(addr, frame_address):
       params_ao_average = params.liveParameters.angleOffsetAverage
       params_stiffness = params.liveParameters.stiffnessFactor
       params_sr = params.liveParameters.steerRatio
+
     # **** tracks *****
 
     # draw all radar points
@@ -457,17 +458,16 @@ def ui_thread(addr, frame_address):
     if good_lt is not None:
       maybe_update_radar_points(good_lt, top_down[1])
 
-    # ***** live20 *****
+    # ***** radarState *****
 
-    # live l20 from drived
-    l20 = recv_one_or_none(live20)
-    if l20 is not None:
-      d_rel = l20.live20.leadOne.dRel + RDR_TO_LDR
-      y_rel = l20.live20.leadOne.yRel
-      lead_status = l20.live20.leadOne.status
-      d_rel2 = l20.live20.leadTwo.dRel + RDR_TO_LDR
-      y_rel2 = l20.live20.leadTwo.yRel
-      lead_status2 = l20.live20.leadTwo.status
+    radar_state = recv_one_or_none(radar_state_sock)
+    if radar_state is not None:
+      d_rel = radar_state.radarState.leadOne.dRel + RDR_TO_LDR
+      y_rel = radar_state.radarState.leadOne.yRel
+      lead_status = radar_state.radarState.leadOne.status
+      d_rel2 = radar_state.radarState.leadTwo.dRel + RDR_TO_LDR
+      y_rel2 = radar_state.radarState.leadTwo.yRel
+      lead_status2 = radar_state.radarState.leadTwo.status
 
     lcal = recv_one_or_none(liveCalibration)
     if lcal is not None:
