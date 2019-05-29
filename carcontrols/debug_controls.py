@@ -8,6 +8,7 @@ from selfdrive.services import service_list
 from cereal import car
 import selfdrive.messaging as messaging
 from selfdrive.car.car_helpers import get_car
+from selfdrive.boardd.boardd import can_list_to_can_capnp
 
 
 def steer_thread():
@@ -24,7 +25,7 @@ def steer_thread():
   button_1_last = 0
   enabled = False
 
-  CI, CP = get_car(logcan, sendcan, None)
+  CI, CP = get_car(logcan, sendcan)
 
   CC = car.CarControl.new_message()
   joystick = messaging.recv_one(joystick_sock)
@@ -74,14 +75,15 @@ def steer_thread():
     CC.hudControl.setSpeed = 20
     CC.cruiseControl.cancel = pcm_cancel_cmd
     CC.enabled = enabled
-    CI.apply(CC)
+    can_sends = CI.apply(CC)
+    sendcan.send(can_list_to_can_capnp(can_sends, msgtype='sendcan'))
 
     # broadcast carState
     cs_send = messaging.new_message()
     cs_send.init('carState')
     cs_send.carState = copy(CS)
     carstate.send(cs_send.to_bytes())
-  
+
     # broadcast carControl
     cc_send = messaging.new_message()
     cc_send.init('carControl')
