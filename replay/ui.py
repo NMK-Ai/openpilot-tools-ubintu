@@ -89,11 +89,15 @@ def draw_var(y, x, var, color, img, calibration, top_down):
 
 class ModelPoly(object):
   def __init__(self, model_path):
-    if len(model_path.points) == 0:
+    if len(model_path.points) == 0 and len(model_path.poly) == 0:
       self.valid = False
       return
 
-    self.poly = model_polyfit(model_path.points, _PATH_PINV)
+    if len(model_path.poly):
+      self.poly = np.array(model_path.poly)
+    else:
+      self.poly = model_polyfit(model_path.points, _PATH_PINV)
+
     self.prob = model_path.prob
     self.std = model_path.std
     self.y = np.polyval(self.poly, _PATH_XD)
