@@ -151,11 +151,11 @@ Setup
     make
     ```
 
-3. Clone openpilot_tools within openpilot, and install dependencies
+3. Clone tools within openpilot, and install dependencies
 
     ```bash
-    git clone https://github.com/commaai/openpilot-tools.git openpilot_tools
-    cd openpilot_tools
+    git clone https://github.com/commaai/openpilot-tools.git tools
+    cd tools
     # sudo pip install if not using a venv
     pip install -r requirements.txt
     pip install -r ../requirements_openpilot.txt
@@ -249,7 +249,7 @@ Connect 2 pandas to the debug board. A panda connects to the PC, the other panda
 Usage:
 ```
 # With MOCK=1 boardd will read logged can messages from a replay and send them to the panda.
-MOCK=1 openpilot_tools/replay/boardd.py
+MOCK=1 tools/replay/boardd.py
 
 # In another terminal:
 python replay/unlogger.py <route-name> <path-to-data-directory>

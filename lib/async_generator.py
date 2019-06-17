@@ -8,7 +8,7 @@ from math import sqrt
 from collections import OrderedDict, deque
 from time import time
 
-from openpilot_tools.lib.pollable_queue import PollableQueue, Empty, Full, ExistentialError
+from tools.lib.pollable_queue import PollableQueue, Empty, Full, ExistentialError
 
 EndSentinel = object()
 

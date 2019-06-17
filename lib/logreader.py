@@ -16,9 +16,9 @@ if platform.system() == "Darwin":
   os.environ["LA_LIBRARY_FILEPATH"] = "/usr/local/opt/libarchive/lib/libarchive.dylib"
 import libarchive.public
 
-from openpilot_tools.lib.exceptions import DataUnreadableError
-from openpilot_tools.lib.filereader import FileReader
-from openpilot_tools.lib.log_util import convert_old_pkt_to_new
+from tools.lib.exceptions import DataUnreadableError
+from tools.lib.filereader import FileReader
+from tools.lib.log_util import convert_old_pkt_to_new
 from cereal import log as capnp_log
 
 OP_PATH = os.path.dirname(os.path.dirname(capnp_log.__file__))

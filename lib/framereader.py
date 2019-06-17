@@ -16,12 +16,12 @@ from lru import LRU
 from functools import wraps
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from openpilot_tools.lib.cache import cache_path_for_file_path
-from openpilot_tools.lib.exceptions import DataUnreadableError
-from openpilot_tools.lib.filereader import FileReader
-from openpilot_tools.lib.file_helpers import atomic_write_in_dir
-from openpilot_tools.lib.mkvparse import mkvindex
-from openpilot_tools.lib.route import Route
+from tools.lib.cache import cache_path_for_file_path
+from tools.lib.exceptions import DataUnreadableError
+from tools.lib.filereader import FileReader
+from tools.lib.file_helpers import atomic_write_in_dir
+from tools.lib.mkvparse import mkvindex
+from tools.lib.route import Route
 
 
 H264_SLICE_P = 0

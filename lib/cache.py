@@ -1,5 +1,5 @@
 import os
-from openpilot_tools.lib.file_helpers import mkdirs_exists_ok
+from tools.lib.file_helpers import mkdirs_exists_ok
 
 DEFAULT_CACHE_DIR = os.path.expanduser("~/.commacache")
 

@@ -5,9 +5,9 @@ import sys
 import re
 import binascii
 
-from openpilot_tools.lib.mkvparse import mkvparse
-from openpilot_tools.lib.mkvparse import mkvgen
-from openpilot_tools.lib.mkvparse.mkvgen import ben, ebml_element, ebml_encode_number
+from tools.lib.mkvparse import mkvparse
+from tools.lib.mkvparse import mkvgen
+from tools.lib.mkvparse.mkvgen import ben, ebml_element, ebml_encode_number
 
 class MatroskaIndex(mkvparse.MatroskaHandler):
   # def __init__(self, banlist, nocluster_mode):

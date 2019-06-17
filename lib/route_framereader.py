@@ -1,5 +1,5 @@
 """RouteFrameReader indexes and reads frames across routes, by frameId or segment indices."""
-from openpilot_tools.lib.framereader import FrameReader
+from tools.lib.framereader import FrameReader
 
 class _FrameReaderDict(dict):
   def __init__(self, camera_paths, cache_paths, framereader_kwargs, *args, **kwargs):

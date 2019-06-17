@@ -21,11 +21,11 @@ from cereal import log as capnp_log
 from selfdrive.services import service_list
 from common import realtime
 
-from openpilot_tools.lib.file_helpers import mkdirs_exists_ok
-from openpilot_tools.lib.kbhit import KBHit
-from openpilot_tools.lib.logreader import MultiLogIterator
-from openpilot_tools.lib.route import Route
-from openpilot_tools.lib.route_framereader import RouteFrameReader
+from tools.lib.file_helpers import mkdirs_exists_ok
+from tools.lib.kbhit import KBHit
+from tools.lib.logreader import MultiLogIterator
+from tools.lib.route import Route
+from tools.lib.route_framereader import RouteFrameReader
 
 # Commands.
 SetRoute = namedtuple("SetRoute", ("name", "start_time", "data_dir"))
