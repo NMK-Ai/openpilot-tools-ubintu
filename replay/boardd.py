@@ -114,12 +114,11 @@ def can_init():
   cloudlog.info("can init done")
 
 def boardd_mock_loop():
-  context = zmq.Context()
   can_init()
   handle.controlWrite(0x40, 0xdc, SAFETY_ALLOUTPUT, 0, b'')
 
-  logcan = messaging.sub_sock(context, service_list['can'].port)
-  sendcan = messaging.pub_sock(context, service_list['sendcan'].port)
+  logcan = messaging.sub_sock(service_list['can'].port)
+  sendcan = messaging.pub_sock(service_list['sendcan'].port)
 
   while 1:
     tsc = messaging.drain_sock(logcan, wait_for_one=True)
@@ -152,16 +151,15 @@ def boardd_test_loop():
 # *** main loop ***
 def boardd_loop(rate=200):
   rk = Ratekeeper(rate)
-  context = zmq.Context()
 
   can_init()
 
   # *** publishes can and health
-  logcan = messaging.pub_sock(context, service_list['can'].port)
-  health_sock = messaging.pub_sock(context, service_list['health'].port)
+  logcan = messaging.pub_sock(service_list['can'].port)
+  health_sock = messaging.pub_sock(service_list['health'].port)
 
   # *** subscribes to can send
-  sendcan = messaging.sub_sock(context, service_list['sendcan'].port)
+  sendcan = messaging.sub_sock(service_list['sendcan'].port)
 
   while 1:
     # health packet @ 1hz
@@ -196,14 +194,13 @@ def boardd_loop(rate=200):
 # *** main loop ***
 def boardd_proxy_loop(rate=200, address="192.168.2.251"):
   rk = Ratekeeper(rate)
-  context = zmq.Context()
 
   can_init()
 
   # *** subscribes can
-  logcan = messaging.sub_sock(context, service_list['can'].port, addr=address)
+  logcan = messaging.sub_sock(service_list['can'].port, addr=address)
   # *** publishes to can send
-  sendcan = messaging.pub_sock(context, service_list['sendcan'].port)
+  sendcan = messaging.pub_sock(service_list['sendcan'].port)
 
   while 1:
     # recv @ 100hz

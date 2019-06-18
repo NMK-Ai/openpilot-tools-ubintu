@@ -32,7 +32,7 @@ def pygame_modules_have_loaded():
 
 
 def ui_thread(addr, frame_address):
-  context = zmq.Context()
+  context = zmq.Context.instance()
 
   pygame.init()
   pygame.font.init()

@@ -197,7 +197,7 @@ def get_blank_lid_overlay(UP):
 
 
 def ui_thread(addr, frame_address):
-  context = zmq.Context()
+  context = zmq.Context.instance()
 
   # TODO: Detect car from replay and use that to select carparams
   CP = ToyotaInterface.get_params("TOYOTA PRIUS 2017", {})
@@ -235,17 +235,17 @@ def ui_thread(addr, frame_address):
   frame.connect(frame_address or "tcp://%s:%d" % (addr, service_list['frame'].port))
   frame.setsockopt(zmq.SUBSCRIBE, "")
 
-  carState = sub_sock(context, service_list['carState'].port, addr=addr, conflate=True)
-  plan = sub_sock(context, service_list['plan'].port, addr=addr, conflate=True)
-  carControl = sub_sock(context, service_list['carControl'].port, addr=addr, conflate=True)
-  radar_state_sock = sub_sock(context, service_list['radarState'].port, addr=addr, conflate=True)
-  liveCalibration = sub_sock(context, service_list['liveCalibration'].port, addr=addr, conflate=True)
-  controls_state_sock = sub_sock(context, service_list['controlsState'].port, addr=addr, conflate=True)
-  liveTracks = sub_sock(context, service_list['liveTracks'].port, addr=addr, conflate=True)
-  model = sub_sock(context, service_list['model'].port, addr=addr, conflate=True)
-  test_model = sub_sock(context, 8040, addr=addr, conflate=True)
-  liveMpc = sub_sock(context, service_list['liveMpc'].port, addr=addr, conflate=True)
-  liveParameters = sub_sock(context, service_list['liveParameters'].port, addr=addr, conflate=True)
+  carState = sub_sock(service_list['carState'].port, addr=addr, conflate=True)
+  plan = sub_sock(service_list['plan'].port, addr=addr, conflate=True)
+  carControl = sub_sock(service_list['carControl'].port, addr=addr, conflate=True)
+  radar_state_sock = sub_sock(service_list['radarState'].port, addr=addr, conflate=True)
+  liveCalibration = sub_sock(service_list['liveCalibration'].port, addr=addr, conflate=True)
+  controls_state_sock = sub_sock(service_list['controlsState'].port, addr=addr, conflate=True)
+  liveTracks = sub_sock(service_list['liveTracks'].port, addr=addr, conflate=True)
+  model = sub_sock(service_list['model'].port, addr=addr, conflate=True)
+  test_model = sub_sock(8040, addr=addr, conflate=True)
+  liveMpc = sub_sock(service_list['liveMpc'].port, addr=addr, conflate=True)
+  liveParameters = sub_sock(service_list['liveParameters'].port, addr=addr, conflate=True)
 
   v_ego, angle_steers, angle_steers_des, model_bias = 0., 0., 0., 0.
   params_ao, params_ao_average, params_stiffness, params_sr = None, None, None, None

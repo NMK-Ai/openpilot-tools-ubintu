@@ -12,9 +12,8 @@ import selfdrive.messaging as messaging
 
 
 if __name__ == "__main__":
-  context = zmq.Context()
-  live_map_sock = messaging.sub_sock(context, service_list['liveMapData'].port, conflate=True)
-  plan_sock = messaging.sub_sock(context, service_list['plan'].port, conflate=True)
+  live_map_sock = messaging.sub_sock(service_list['liveMapData'].port, conflate=True)
+  plan_sock = messaging.sub_sock(service_list['plan'].port, conflate=True)
 
   plt.ion()
   fig = plt.figure(figsize=(8, 16))

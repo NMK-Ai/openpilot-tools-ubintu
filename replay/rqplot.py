@@ -18,7 +18,6 @@ def recursive_getattr(x, name):
 
 
 if __name__ == "__main__":
-  context = zmq.Context()
   poller = zmq.Poller()
 
   services = []
@@ -41,7 +40,7 @@ if __name__ == "__main__":
     sub_split = sub.split(".")
     services.append(sub_split[0])
     fields.append(".".join(sub_split[1:]))
-    subs.append(messaging.sub_sock(context, service_list[sub_split[0]].port, poller))
+    subs.append(messaging.sub_sock(service_list[sub_split[0]].port, poller))
 
     x.append(np.ones(LEN)*np.nan)
     y.append(np.ones(LEN)*np.nan)
