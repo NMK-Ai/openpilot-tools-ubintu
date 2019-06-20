@@ -21,11 +21,6 @@ from tools.lib.lazy_property import lazy_property
 from tools.replay.lib.ui_helpers import to_lid_pt, draw_path, draw_steer_path, draw_mpc, \
                                                   draw_lead_car, draw_lead_on, init_plots, warp_points, find_color
 from selfdrive.car.toyota.interface import CarInterface as ToyotaInterface
-try:
-  from selfdrive.visiond.visiontest import VisionTest
-  vision_test = True
-except ImportError:
-  vision_test = False
 
 HOR = os.getenv("HORIZONTAL") is not None
 
@@ -49,6 +44,7 @@ _BB_TO_FULL_FRAME = np.asarray([
 _FULL_FRAME_TO_BB = np.linalg.inv(_BB_TO_FULL_FRAME)
 
 ModelUIData = namedtuple("ModelUIData", ["cpath", "lpath", "rpath", "lead", "lead_std", "freepath"])
+
 
 
 class CalibrationTransformsForWarpMatrix(object):
@@ -285,8 +281,6 @@ def ui_thread(addr, frame_address):
   good_lt = None
   lid_overlay_blank = get_blank_lid_overlay(UP)
   img_offset = (0, 0)
-  if vision_test:
-    visiontest = VisionTest(FULL_FRAME_SIZE, MODEL_INPUT_SIZE, None)
 
   # plots
   name_to_arr_idx = { "gas": 0,
@@ -323,6 +317,7 @@ def ui_thread(addr, frame_address):
 
   draw_plots = init_plots(plot_arr, name_to_arr_idx, plot_xlims, plot_ylims, plot_names, plot_colors, plot_styles, bigplots=True)
 
+  counter = 0
   while 1:
     list(pygame.event.get())
 
@@ -357,13 +352,11 @@ def ui_thread(addr, frame_address):
       img.fill(0)
       intrinsic_matrix = np.eye(3)
 
-    if calibration is not None and yuv_img and vision_test:
-      model_input_yuv = visiontest.transform_contiguous(yuv_img,
-        np.dot(yuv_transform, calibration.model_to_full_frame).reshape(-1).tolist())
-      cv2.cvtColor(
-        np.frombuffer(model_input_yuv, dtype=np.uint8).reshape(MODEL_INPUT_SIZE[1] * 3 // 2, -1),
-        cv2.COLOR_YUV2RGB_I420,
-        dst=imgw)
+    if calibration is not None and yuv_img:
+      transform = np.dot(yuv_transform, calibration.model_to_full_frame)
+      yuv_np = np.frombuffer(yuv_img, dtype=np.uint8).reshape(FULL_FRAME_SIZE[1] * 3 // 2, -1)
+      rgb_np = cv2.cvtColor(yuv_np, cv2.COLOR_YUV2RGB_I420)
+      imgw = cv2.warpAffine(rgb_np, transform[:2], (MODEL_INPUT_SIZE[0], MODEL_INPUT_SIZE[1]), flags=cv2.WARP_INVERSE_MAP)
     else:
       imgw.fill(0)
     imgw_test_model = imgw.copy()
