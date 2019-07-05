@@ -36,21 +36,14 @@ def index_log(fn):
     raise DataUnreadableError("%s capnp is corrupted/truncated" % fn)
   return np.frombuffer(dat, dtype=np.uint64)
 
-def event_read_multiple(fn):
-  # pycapnp read_multiple is broken
-
-  idx = index_log(fn)
-  with open(fn, "rb") as f:
-    dat = f.read()
-
-  return [capnp_log.Event.from_bytes(dat[idx[i]:idx[i+1]])
-          for i in xrange(len(idx)-1)]
-
 def event_read_multiple_bytes(dat):
   with tempfile.NamedTemporaryFile() as dat_f:
     dat_f.write(dat)
     dat_f.flush()
     idx = index_log(dat_f.name)
+
+  end_idx = np.uint64(len(dat))
+  idx = np.append(idx, end_idx)
 
   return [capnp_log.Event.from_bytes(dat[idx[i]:idx[i+1]])
           for i in xrange(len(idx)-1)]
