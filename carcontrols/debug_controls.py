@@ -12,15 +12,14 @@ from selfdrive.boardd.boardd import can_list_to_can_capnp
 
 
 def steer_thread():
-  context = zmq.Context()
   poller = zmq.Poller()
 
-  logcan = messaging.sub_sock(context, service_list['can'].port)
-  joystick_sock = messaging.sub_sock(context, service_list['testJoystick'].port, conflate=True, poller=poller)
+  logcan = messaging.sub_sock(service_list['can'].port)
+  joystick_sock = messaging.sub_sock(service_list['testJoystick'].port, conflate=True, poller=poller)
 
-  carstate = messaging.pub_sock(context, service_list['carState'].port)
-  carcontrol = messaging.pub_sock(context, service_list['carControl'].port)
-  sendcan = messaging.pub_sock(context, service_list['sendcan'].port)
+  carstate = messaging.pub_sock(service_list['carState'].port)
+  carcontrol = messaging.pub_sock(service_list['carControl'].port)
+  sendcan = messaging.pub_sock(service_list['sendcan'].port)
 
   button_1_last = 0
   enabled = False
@@ -37,7 +36,8 @@ def steer_thread():
       if socket is joystick_sock:
         joystick = messaging.recv_one(socket)
 
-    CS = CI.update(CC)
+    can_strs = messaging.drain_sock_raw(logcan, wait_for_one=True)
+    CS = CI.update(CC, can_strs)
 
     # Usually axis run in pairs, up/down for one, and left/right for
     # the other.

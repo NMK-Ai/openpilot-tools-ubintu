@@ -13,8 +13,7 @@ import selfdrive.messaging as messaging
 
 
 def joystick_thread():
-  context = zmq.Context()
-  joystick_sock = messaging.pub_sock(context, service_list['testJoystick'].port)
+  joystick_sock = messaging.pub_sock(service_list['testJoystick'].port)
 
   pygame.init()
 
