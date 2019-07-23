@@ -14,7 +14,7 @@ from common.transformations.camera import eon_intrinsics, FULL_FRAME_SIZE
 from common.transformations.model import MODEL_CX, MODEL_CY, MODEL_INPUT_SIZE
 from selfdrive.config import UIParams as UP
 from selfdrive.services import service_list
-from selfdrive.controls.lib.radar_helpers import RDR_TO_LDR
+from selfdrive.config import RADAR_TO_CENTER
 from selfdrive.controls.lib.vehicle_model import VehicleModel
 from selfdrive.controls.lib.latcontrol_helpers import calc_desired_path, compute_path_pinv, model_polyfit
 from tools.lib.lazy_property import lazy_property
@@ -459,10 +459,10 @@ def ui_thread(addr, frame_address):
 
     radar_state = recv_one_or_none(radar_state_sock)
     if radar_state is not None:
-      d_rel = radar_state.radarState.leadOne.dRel + RDR_TO_LDR
+      d_rel = radar_state.radarState.leadOne.dRel + RADAR_TO_CENTER
       y_rel = radar_state.radarState.leadOne.yRel
       lead_status = radar_state.radarState.leadOne.status
-      d_rel2 = radar_state.radarState.leadTwo.dRel + RDR_TO_LDR
+      d_rel2 = radar_state.radarState.leadTwo.dRel + RADAR_TO_CENTER
       y_rel2 = radar_state.radarState.leadTwo.yRel
       lead_status2 = radar_state.radarState.leadTwo.status
 
