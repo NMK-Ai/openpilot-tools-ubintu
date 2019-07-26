@@ -159,7 +159,7 @@ def maybe_update_radar_points(lt, lid_overlay):
   if lt is not None:
     ar_pts = {}
     for track in lt.liveTracks:
-      ar_pts[track.trackId] = [track.dRel, track.yRel, track.vRel, track.aRel, track.oncoming, track.stationary]
+      ar_pts[track.trackId] = [track.dRel + RADAR_TO_CENTER, track.yRel, track.vRel, track.aRel, track.oncoming, track.stationary]
   for ids, pt in ar_pts.viewitems():
     px, py = to_lid_pt(pt[0], pt[1])
     if px != -1:
