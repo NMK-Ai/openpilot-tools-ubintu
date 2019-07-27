@@ -30,8 +30,9 @@ if __name__ == "__main__":
   #fig = plt.figure(figsize=(10, 15))
   #ax = fig.add_subplot(111)
   ax.grid(True)
+  fig.canvas.draw()
 
-  subs_name = sys.argv[1:] 
+  subs_name = sys.argv[1:]
   lines = []
   x, y = [], []
   LEN = 500
@@ -70,9 +71,7 @@ if __name__ == "__main__":
 
     ax.relim()
     ax.autoscale_view(True, scaley=True, scalex=True)
-  
-    # TODO: use animation... for now faster to blit instead of draw
-    #fig.canvas.draw()
+
     fig.canvas.blit(ax.bbox)
     fig.canvas.flush_events()
 
