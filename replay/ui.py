@@ -16,7 +16,7 @@ from selfdrive.config import UIParams as UP
 from selfdrive.services import service_list
 from selfdrive.config import RADAR_TO_CENTER
 from selfdrive.controls.lib.vehicle_model import VehicleModel
-from selfdrive.controls.lib.latcontrol_helpers import calc_desired_path, compute_path_pinv, model_polyfit
+from selfdrive.controls.lib.latcontrol_helpers import compute_path_pinv, model_polyfit
 from tools.lib.lazy_property import lazy_property
 from tools.replay.lib.ui_helpers import to_lid_pt, draw_path, draw_steer_path, draw_mpc, \
                                                   draw_lead_car, draw_lead_on, init_plots, warp_points, find_color
@@ -108,7 +108,7 @@ def extract_model_data(md):
     lead_std=md.model.lead.std,
     freepath=md.model.freePath)
 
-def plot_model(m, VM, v_ego, curvature, imgw, calibration, top_down, top_down_color=216):
+def plot_model(m, VM, v_ego, curvature, imgw, calibration, top_down, d_poly, top_down_color=216):
   # Draw bar representing position and distribution of lead car from unfiltered vision model
   if top_down is not None:
     _, _ = to_lid_pt(m.lead, 0)
@@ -119,15 +119,8 @@ def plot_model(m, VM, v_ego, curvature, imgw, calibration, top_down, top_down_co
   if calibration is None:
     return
 
-  if m.cpath.valid:
-    draw_path(m.cpath.y, _PATH_XD, YELLOW, imgw, calibration, top_down, YELLOW)
-    draw_var(m.cpath.y, _PATH_XD, m.cpath.std, YELLOW, imgw, calibration, top_down)
-
-    dpath_poly, _, _ = calc_desired_path(m.lpath.poly, m.rpath.poly, m.cpath.poly,
-                                         m.lpath.prob, m.rpath.prob, m.cpath.prob, v_ego)
-    dpath_poly = np.array(dpath_poly)
-
-    dpath_y = np.polyval(dpath_poly, _PATH_X)
+  if d_poly is not None:
+    dpath_y = np.polyval(d_poly, _PATH_X)
     draw_path(dpath_y, _PATH_X, RED, imgw, calibration, top_down, RED)
 
   if m.lpath.valid:
@@ -242,6 +235,7 @@ def ui_thread(addr, frame_address):
   test_model = sub_sock(8040, addr=addr, conflate=True)
   liveMpc = sub_sock(service_list['liveMpc'].port, addr=addr, conflate=True)
   liveParameters = sub_sock(service_list['liveParameters'].port, addr=addr, conflate=True)
+  pathPlan = sub_sock(service_list['pathPlan'].port, addr=addr, conflate=True)
 
   v_ego, angle_steers, angle_steers_des, model_bias = 0., 0., 0., 0.
   params_ao, params_ao_average, params_stiffness, params_sr = None, None, None, None
@@ -257,6 +251,7 @@ def ui_thread(addr, frame_address):
   computer_brake = 0.
   plan_source = 'none'
   long_control_state = 'none'
+  d_poly = None
 
   model_data = None
   test_model_data = None
@@ -397,6 +392,10 @@ def ui_thread(addr, frame_address):
       a_target = p.plan.aTarget
       plan_source = p.plan.longitudinalPlanSource
 
+    pp = recv_one_or_none(pathPlan)
+    if pp is not None:
+      d_poly = np.array(pp.pathPlan.dPoly)
+
     plot_arr[:-1] = plot_arr[1:]
     plot_arr[-1, name_to_arr_idx['angle_steers']] = angle_steers
     plot_arr[-1, name_to_arr_idx['angle_steers_des']] = angle_steers_des
@@ -422,7 +421,7 @@ def ui_thread(addr, frame_address):
 
     if model_data:
       plot_model(model_data, VM, v_ego, curvature, imgw, calibration,
-                 top_down)
+                 top_down, d_poly)
 
     if test_model is not None:
       test_md = recv_one_or_none(test_model)
