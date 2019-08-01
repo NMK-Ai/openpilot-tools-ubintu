@@ -37,7 +37,7 @@ Setup
     - core tools
       ```bash
       sudo apt install git curl python-pip
-      sudo pip install --upgrade pip>=18.0
+      sudo pip install --upgrade pip>=18.0 pipenv
       ```
 
     - ffmpeg (tested with 3.3.2)
@@ -81,7 +81,7 @@ Setup
     - core tools
       ``` bash
       brew install git
-      sudo pip install --upgrade pip
+      sudo pip install --upgrade pip pipenv
       xcode-select --install
       ```
 
@@ -156,9 +156,8 @@ Setup
     ```bash
     git clone https://github.com/commaai/openpilot-tools.git tools
     cd tools
-    # sudo pip install if not using a venv
-    pip install -r requirements.txt
-    pip install -r ../requirements_openpilot.txt
+    pipenv install # Install dependencies in a virtualenv
+    pipenv shell # Activiate the virtualenv
     ```
 
 4. Add openpilot to your `PYTHONPATH`.
