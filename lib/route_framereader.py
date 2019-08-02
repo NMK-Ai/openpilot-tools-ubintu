@@ -60,7 +60,7 @@ class RouteFrameReader(object):
     if segment_num is None or segment_num == -1 or segment_id == -1:
       return None
     else:
-      return self.get_from_segment(segment_num, segment_id)
+      return self.get_from_segment(segment_num, segment_id, **kwargs)
 
   def get_from_segment(self, segment_num, segment_id, **kwargs):
     """Get a frame from a specific segment with a specific index in that segment (segment_id).

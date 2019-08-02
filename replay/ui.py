@@ -322,24 +322,22 @@ def ui_thread(addr, frame_address):
 
     # ***** frame *****
     fpkt = recv_one(frame)
-    yuv_img = fpkt.frame.image
+    rgb_img_raw = fpkt.frame.image
 
     if fpkt.frame.transform:
-      yuv_transform = np.array(fpkt.frame.transform).reshape(3,3)
+      img_transform = np.array(fpkt.frame.transform).reshape(3,3)
     else:
       # assume frame is flipped
-      yuv_transform = np.array([
+      img_transform = np.array([
         [-1.0,  0.0, FULL_FRAME_SIZE[0]-1],
         [ 0.0, -1.0, FULL_FRAME_SIZE[1]-1],
         [ 0.0,  0.0, 1.0]
       ])
 
 
-    if yuv_img and len(yuv_img) == FULL_FRAME_SIZE[0] * FULL_FRAME_SIZE[1] * 3 // 2:
-      yuv_np = np.frombuffer(yuv_img, dtype=np.uint8).reshape(FULL_FRAME_SIZE[1] * 3 // 2, -1)
-
-      cv2.cvtColor(yuv_np, cv2.COLOR_YUV2RGB_I420, dst=imgff)
-      cv2.warpAffine(imgff, np.dot(yuv_transform, _BB_TO_FULL_FRAME)[:2],
+    if rgb_img_raw and len(rgb_img_raw) == FULL_FRAME_SIZE[0] * FULL_FRAME_SIZE[1] * 3:
+      imgff = np.frombuffer(rgb_img_raw, dtype=np.uint8).reshape((FULL_FRAME_SIZE[1], FULL_FRAME_SIZE[0], 3))
+      cv2.warpAffine(imgff, np.dot(img_transform, _BB_TO_FULL_FRAME)[:2],
         (img.shape[1], img.shape[0]), dst=img, flags=cv2.WARP_INVERSE_MAP)
 
       intrinsic_matrix = eon_intrinsics
@@ -347,11 +345,9 @@ def ui_thread(addr, frame_address):
       img.fill(0)
       intrinsic_matrix = np.eye(3)
 
-    if calibration is not None and yuv_img:
-      transform = np.dot(yuv_transform, calibration.model_to_full_frame)
-      yuv_np = np.frombuffer(yuv_img, dtype=np.uint8).reshape(FULL_FRAME_SIZE[1] * 3 // 2, -1)
-      rgb_np = cv2.cvtColor(yuv_np, cv2.COLOR_YUV2RGB_I420)
-      imgw = cv2.warpAffine(rgb_np, transform[:2], (MODEL_INPUT_SIZE[0], MODEL_INPUT_SIZE[1]), flags=cv2.WARP_INVERSE_MAP)
+    if calibration is not None:
+      transform = np.dot(img_transform, calibration.model_to_full_frame)
+      imgw = cv2.warpAffine(imgff, transform[:2], (MODEL_INPUT_SIZE[0], MODEL_INPUT_SIZE[1]), flags=cv2.WARP_INVERSE_MAP)
     else:
       imgw.fill(0)
     imgw_test_model = imgw.copy()

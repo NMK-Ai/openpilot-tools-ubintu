@@ -107,7 +107,8 @@ class UnloggerWorker(object):
         # Frame exists, make sure we have a framereader.
         # load the frame readers as needed
         s1 = time.time()
-        img = self._frame_reader.get(frame_id, pix_fmt="yuv420p")
+        img = self._frame_reader.get(frame_id, pix_fmt="rgb24")
+        img = img.flatten()
         fr_time = time.time() - s1
         if fr_time > 0.05:
           print "FRAME(%d) LAG -- %.2f ms" % (frame_id, fr_time*1000.0)
@@ -341,7 +342,7 @@ def get_arg_parser():
 
   parser.add_argument("route_name", type=(lambda x: x.replace("#", "|")), nargs="?",
                       help="The route whose messages will be published.")
-  parser.add_argument("data_dir", nargs='?', default=os.getenv('UNLOGGER_DATA_DIR'), 
+  parser.add_argument("data_dir", nargs='?', default=os.getenv('UNLOGGER_DATA_DIR'),
 		      help="Path to directory in which log and camera files are located.")
 
   parser.add_argument("--no-loop", action="store_true", help="Stop at the end of the replay.")
