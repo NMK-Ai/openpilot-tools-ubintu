@@ -138,6 +138,8 @@ Setup
     ```bash
     git clone https://github.com/commaai/openpilot.git
     cd openpilot
+    pipenv install # Install dependencies in a virtualenv
+    pipenv shell # Activate the virtualenv
     ```
 
     **For Mac users**
@@ -156,8 +158,7 @@ Setup
     ```bash
     git clone https://github.com/commaai/openpilot-tools.git tools
     cd tools
-    pipenv install # Install dependencies in a virtualenv
-    pipenv shell # Activiate the virtualenv
+    pip install -r requirements.txt # Install openpilot-tools dependencies in virtualenv
     ```
 
 4. Add openpilot to your `PYTHONPATH`.
