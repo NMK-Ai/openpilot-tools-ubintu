@@ -49,7 +49,7 @@ class PollableQueue(object):
     if block:
       while self._put_poll(timeout if timeout is not None else -1):
         try:
-          # TODO(mgraczyk): This is broken for multiple push threads when the queue is full.
+          # TODO: This is broken for multiple push threads when the queue is full.
           return self.put_nowait(item)
         except OSError as e:
           if e.errno != 11:
