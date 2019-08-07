@@ -21,6 +21,7 @@ from tools.lib.lazy_property import lazy_property
 from tools.replay.lib.ui_helpers import to_lid_pt, draw_path, draw_steer_path, draw_mpc, \
                                                   draw_lead_car, draw_lead_on, init_plots, warp_points, find_color
 from selfdrive.car.toyota.interface import CarInterface as ToyotaInterface
+from common.transformations.model import get_camera_frame_from_model_frame
 
 HOR = os.getenv("HORIZONTAL") is not None
 
@@ -477,7 +478,9 @@ def ui_thread(addr, frame_address):
       calibration_message = lcal.liveCalibration
       extrinsic_matrix = np.asarray(calibration_message.extrinsicMatrix).reshape(3, 4)
 
-      warp_matrix = np.asarray(calibration_message.warpMatrix2).reshape(3, 3)
+      ke = intrinsic_matrix.dot(extrinsic_matrix)
+      warp_matrix = get_camera_frame_from_model_frame(ke)
+
       calibration = CalibrationTransformsForWarpMatrix(warp_matrix, intrinsic_matrix, extrinsic_matrix)
 
     # draw red pt for lead car in the main img
