@@ -247,6 +247,7 @@ def ui_thread(addr, frame_address):
   computer_gas = 0.
   brake = 0.
   steer_torque = 0.
+  angle_steers_k = np.inf
   curvature = 0.
   computer_brake = 0.
   plan_source = 'none'
@@ -286,27 +287,28 @@ def ui_thread(addr, frame_address):
                       "v_pid": 5,
                       "angle_steers_des": 6,
                       "angle_steers": 7,
-                      "steer_torque": 8,
-                      "v_override": 9,
-                      "v_cruise": 10,
-                      "a_ego": 11,
-                      "a_target": 12,
-                      "accel_override": 13}
+                      "angle_steers_k": 8,
+                      "steer_torque": 9,
+                      "v_override": 10,
+                      "v_cruise": 11,
+                      "a_ego": 12,
+                      "a_target": 13,
+                      "accel_override": 14}
 
   plot_arr = np.zeros((100, len(name_to_arr_idx.values())))
 
   plot_xlims = [(0, plot_arr.shape[0]), (0, plot_arr.shape[0]), (0, plot_arr.shape[0]), (0, plot_arr.shape[0])]
   plot_ylims = [(-0.1, 1.1), (-5., 5.), (0., 75.), (-3.0, 2.0)]
   plot_names = [["gas", "computer_gas", "user_brake", "computer_brake", "accel_override"],
-                ["angle_steers", "angle_steers_des", "steer_torque"],
+                ["angle_steers", "angle_steers_des", "angle_steers_k", "steer_torque"],
                 ["v_ego", "v_override", "v_pid", "v_cruise"],
                 ["a_ego", "a_target"]]
   plot_colors = [["b", "b", "g", "r", "y"],
-                 ["b", "g", "r"],
+                 ["b", "g", "y", "r"],
                  ["b", "g", "r", "y"],
                  ["b", "r"]]
   plot_styles = [["-", "-", "-", "-", "-"],
-                 ["-", "-", "-"],
+                 ["-", "-", "-", "-"],
                  ["-", "-", "-", "-"],
                  ["-", "-"]]
 
@@ -358,6 +360,13 @@ def ui_thread(addr, frame_address):
     if controls_state is not None:
       v_ego = controls_state.controlsState.vEgo
       angle_steers = controls_state.controlsState.angleSteers
+
+      w = controls_state.controlsState.lateralControlState.which()
+      if w == 'lqrState':
+        angle_steers_k = controls_state.controlsState.lateralControlState.lqrState.steerAngle
+      elif w == 'indiState':
+        angle_steers_k = controls_state.controlsState.lateralControlState.indiState.steerAngle
+
       model_bias = controls_state.controlsState.angleModelBias
       curvature = controls_state.controlsState.curvature
       v_pid = controls_state.controlsState.vPid
@@ -395,6 +404,8 @@ def ui_thread(addr, frame_address):
     plot_arr[:-1] = plot_arr[1:]
     plot_arr[-1, name_to_arr_idx['angle_steers']] = angle_steers
     plot_arr[-1, name_to_arr_idx['angle_steers_des']] = angle_steers_des
+
+    plot_arr[-1, name_to_arr_idx['angle_steers_k']] = angle_steers_k
     plot_arr[-1, name_to_arr_idx['gas']] = gas
     plot_arr[-1, name_to_arr_idx['computer_gas']] = computer_gas
     plot_arr[-1, name_to_arr_idx['user_brake']] = brake
