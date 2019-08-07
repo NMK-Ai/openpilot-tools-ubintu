@@ -34,7 +34,7 @@ def to_lid_pt(y, x):
 
 
 def draw_path(y, x, color, img, calibration, top_down, lid_color=None):
-  # TODO(mgraczyk): Remove big box.
+  # TODO: Remove big box.
   uv_model_real = warp_points(np.column_stack((x, y)), calibration.car_to_model)
   uv_model = np.round(uv_model_real).astype(int)
 
