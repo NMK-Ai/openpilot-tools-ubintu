@@ -31,8 +31,8 @@ YELLOW = (255, 255, 0)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
-_PATH_X = np.arange(101.)
-_PATH_XD = np.arange(101.)
+_PATH_X = np.arange(192.)
+_PATH_XD = np.arange(192.)
 _PATH_PINV = compute_path_pinv(50)
 #_BB_OFFSET = 290, 332
 _BB_OFFSET = 0,0
