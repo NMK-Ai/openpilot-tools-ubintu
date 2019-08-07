@@ -108,12 +108,12 @@ class UnloggerWorker(object):
         # load the frame readers as needed
         s1 = time.time()
         img = self._frame_reader.get(frame_id, pix_fmt="rgb24")
-        img = img.flatten()
         fr_time = time.time() - s1
         if fr_time > 0.05:
           print "FRAME(%d) LAG -- %.2f ms" % (frame_id, fr_time*1000.0)
 
         if img is not None:
+          img = img.flatten()
           smsg.frame.image = img.tobytes()
 
       data_socket.send_pyobj((cookie, typ, msg.logMonoTime, route_time), flags=zmq.SNDMORE)
