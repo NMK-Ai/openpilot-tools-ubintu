@@ -18,8 +18,7 @@ from selfdrive.config import RADAR_TO_CENTER
 from selfdrive.controls.lib.vehicle_model import VehicleModel
 from selfdrive.controls.lib.latcontrol_helpers import compute_path_pinv, model_polyfit
 from tools.lib.lazy_property import lazy_property
-from tools.replay.lib.ui_helpers import to_lid_pt, draw_path, draw_steer_path, draw_mpc, \
-                                                  draw_lead_car, draw_lead_on, init_plots, warp_points, find_color
+from tools.replay.lib.ui_helpers import to_lid_pt, draw_path, draw_mpc, draw_lead_car, draw_lead_on, init_plots, warp_points
 from selfdrive.car.toyota.interface import CarInterface as ToyotaInterface
 from common.transformations.model import get_camera_frame_from_model_frame
 
