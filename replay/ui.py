@@ -121,9 +121,6 @@ def plot_model(m, VM, v_ego, curvature, imgw, calibration, top_down, d_poly, top
   if calibration is None:
     return
 
-  if d_poly is not None:
-    dpath_y = np.polyval(d_poly, _PATH_X)
-    draw_path(dpath_y, _PATH_X, RED, imgw, calibration, top_down, RED)
 
   if m.cpath.valid:
     color = (0, int(255 * m.lpath.prob), 0)
@@ -149,6 +146,10 @@ def plot_model(m, VM, v_ego, curvature, imgw, calibration, top_down, d_poly, top
         top_down[1][int(round(px - 4)):int(round(px + 4)), int(round(py - 4)):int(round(py + 4))] = find_color(top_down[0], (0, cols[int((p-0.4)*10)], 0))
       elif p <= 0.2:
         top_down[1][int(round(px - 4)):int(round(px + 4)), int(round(py - 4)):int(round(py + 4))] = 192 #find_color(top_down[0], (192, 0, 0))
+
+  if d_poly is not None:
+    dpath_y = np.polyval(d_poly, _PATH_X)
+    draw_path(dpath_y, _PATH_X, RED, imgw, calibration, top_down, RED)
 
   # draw user path from curvature
   # draw_steer_path(v_ego, curvature, BLUE, imgw, calibration, top_down, VM, BLUE)
