@@ -45,7 +45,7 @@ _BB_TO_FULL_FRAME = np.asarray([
     [0., 0.,   1.]])
 _FULL_FRAME_TO_BB = np.linalg.inv(_BB_TO_FULL_FRAME)
 
-ModelUIData = namedtuple("ModelUIData", ["cpath", "lpath", "rpath", "lead", "lead_std", "freepath"])
+ModelUIData = namedtuple("ModelUIData", ["cpath", "lpath", "rpath", "lead", "lead_future"])
 
 
 
@@ -106,46 +106,27 @@ def extract_model_data(md):
     cpath=ModelPoly(md.model.path),
     lpath=ModelPoly(md.model.leftLane),
     rpath=ModelPoly(md.model.rightLane),
-    lead=md.model.lead.dist,
-    lead_std=md.model.lead.std,
-    freepath=md.model.freePath)
+    lead=md.model.lead,
+    lead_future=md.model.leadFuture,
+    )
 
 def plot_model(m, VM, v_ego, curvature, imgw, calibration, top_down, d_poly, top_down_color=216):
-  # Draw bar representing position and distribution of lead car from unfiltered vision model
-  if top_down is not None:
-    _, _ = to_lid_pt(m.lead, 0)
-    _, py_top = to_lid_pt(m.lead + m.lead_std, 0)
-    px, py_bottom = to_lid_pt(m.lead - m.lead_std, 0)
-    top_down[1][int(round(px - 4)):int(round(px + 4)), py_top:py_bottom] = top_down_color
-
-  if calibration is None:
+  if calibration is None or top_down is None:
     return
 
+  for lead in [m.lead, m.lead_future]:
+    if lead.prob < 0.5:
+      continue
 
-  if m.cpath.valid:
-    color = (0, int(255 * m.lpath.prob), 0)
-    draw_path(m.cpath.y, _PATH_XD, color, imgw, calibration, top_down, YELLOW)
-    draw_var(m.cpath.y, _PATH_XD, m.cpath.std, color, imgw, calibration, top_down)
+    _, py_top = to_lid_pt(lead.dist + lead.std, lead.relY)
+    px, py_bottom = to_lid_pt(lead.dist - lead.std, lead.relY)
+    top_down[1][int(round(px - 4)):int(round(px + 4)), py_top:py_bottom] = top_down_color
 
-  if m.lpath.valid:
-    color = (0, int(255 * m.lpath.prob), 0)
-    draw_path(m.lpath.y, _PATH_XD, color, imgw, calibration, top_down, YELLOW)
-    draw_var(m.lpath.y, _PATH_XD, m.lpath.std, color, imgw, calibration, top_down)
-
-  if m.rpath.valid:
-    color = (0, int(255 * m.rpath.prob), 0)
-    draw_path(m.rpath.y, _PATH_XD, color, imgw, calibration, top_down, YELLOW)
-    draw_var(m.rpath.y, _PATH_XD, m.rpath.std, color, imgw, calibration, top_down)
-
-  if len(m.freepath) > 0:
-    for i, p in enumerate(m.freepath):
-      d = i*2
-      px, py = to_lid_pt(d, 0)
-      cols = [36, 73, 109, 146, 182, 219, 255]
-      if p >= 0.4:
-        top_down[1][int(round(px - 4)):int(round(px + 4)), int(round(py - 4)):int(round(py + 4))] = find_color(top_down[0], (0, cols[int((p-0.4)*10)], 0))
-      elif p <= 0.2:
-        top_down[1][int(round(px - 4)):int(round(px + 4)), int(round(py - 4)):int(round(py + 4))] = 192 #find_color(top_down[0], (192, 0, 0))
+  color = (0, int(255 * m.lpath.prob), 0)
+  for path in [m.cpath, m.lpath, m.rpath]:
+    if path.valid:
+      draw_path(path.y, _PATH_XD, color, imgw, calibration, top_down, YELLOW)
+      draw_var(path.y, _PATH_XD, path.std, color, imgw, calibration, top_down)
 
   if d_poly is not None:
     dpath_y = np.polyval(d_poly, _PATH_X)
