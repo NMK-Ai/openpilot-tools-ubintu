@@ -23,6 +23,7 @@ from tools.replay.lib.ui_helpers import to_lid_pt, draw_path, draw_steer_path, d
 from selfdrive.car.toyota.interface import CarInterface as ToyotaInterface
 from common.transformations.model import get_camera_frame_from_model_frame
 
+ANGLE_SCALE = 5.0
 HOR = os.getenv("HORIZONTAL") is not None
 
 RED = (255, 0, 0)
@@ -124,6 +125,11 @@ def plot_model(m, VM, v_ego, curvature, imgw, calibration, top_down, d_poly, top
     dpath_y = np.polyval(d_poly, _PATH_X)
     draw_path(dpath_y, _PATH_X, RED, imgw, calibration, top_down, RED)
 
+  if m.cpath.valid:
+    color = (0, int(255 * m.lpath.prob), 0)
+    draw_path(m.cpath.y, _PATH_XD, color, imgw, calibration, top_down, YELLOW)
+    draw_var(m.cpath.y, _PATH_XD, m.cpath.std, color, imgw, calibration, top_down)
+
   if m.lpath.valid:
     color = (0, int(255 * m.lpath.prob), 0)
     draw_path(m.lpath.y, _PATH_XD, color, imgw, calibration, top_down, YELLOW)
@@ -145,7 +151,7 @@ def plot_model(m, VM, v_ego, curvature, imgw, calibration, top_down, d_poly, top
         top_down[1][int(round(px - 4)):int(round(px + 4)), int(round(py - 4)):int(round(py + 4))] = 192 #find_color(top_down[0], (192, 0, 0))
 
   # draw user path from curvature
-  draw_steer_path(v_ego, curvature, BLUE, imgw, calibration, top_down, VM, BLUE)
+  # draw_steer_path(v_ego, curvature, BLUE, imgw, calibration, top_down, VM, BLUE)
 
 
 def maybe_update_radar_points(lt, lid_overlay):
@@ -299,7 +305,7 @@ def ui_thread(addr, frame_address):
   plot_arr = np.zeros((100, len(name_to_arr_idx.values())))
 
   plot_xlims = [(0, plot_arr.shape[0]), (0, plot_arr.shape[0]), (0, plot_arr.shape[0]), (0, plot_arr.shape[0])]
-  plot_ylims = [(-0.1, 1.1), (-5., 5.), (0., 75.), (-3.0, 2.0)]
+  plot_ylims = [(-0.1, 1.1), (-ANGLE_SCALE, ANGLE_SCALE), (0., 75.), (-3.0, 2.0)]
   plot_names = [["gas", "computer_gas", "user_brake", "computer_brake", "accel_override"],
                 ["angle_steers", "angle_steers_des", "angle_steers_k", "steer_torque"],
                 ["v_ego", "v_override", "v_pid", "v_cruise"],
@@ -389,7 +395,7 @@ def ui_thread(addr, frame_address):
       v_override = cc.carControl.cruiseControl.speedOverride
       computer_brake = cc.carControl.actuators.brake
       computer_gas = cc.carControl.actuators.gas
-      steer_torque = cc.carControl.actuators.steer * 5.
+      steer_torque = cc.carControl.actuators.steer * ANGLE_SCALE
       angle_steers_des = cc.carControl.actuators.steerAngle
       accel_override = cc.carControl.cruiseControl.accelOverride
 
