@@ -1,26 +1,32 @@
 #!/usr/bin/env python
-import os
-from common.basedir import BASEDIR
-os.environ['BASEDIR'] = BASEDIR
 import argparse
-import zmq
-import pygame
-import numpy as np
-import cv2
+import os
 import sys
 from collections import namedtuple
-from selfdrive.messaging import sub_sock, recv_one_or_none, recv_one
-from common.transformations.camera import eon_intrinsics, FULL_FRAME_SIZE
-from common.transformations.model import MODEL_CX, MODEL_CY, MODEL_INPUT_SIZE
-from selfdrive.config import UIParams as UP
-from selfdrive.services import service_list
-from selfdrive.config import RADAR_TO_CENTER
-from selfdrive.controls.lib.vehicle_model import VehicleModel
-from selfdrive.controls.lib.latcontrol_helpers import compute_path_pinv, model_polyfit
-from tools.lib.lazy_property import lazy_property
-from tools.replay.lib.ui_helpers import to_lid_pt, draw_path, draw_mpc, draw_lead_car, draw_lead_on, init_plots, warp_points
+
+import cv2
+import numpy as np
+import pygame
+import zmq
+
+from common.basedir import BASEDIR
+from common.transformations.camera import FULL_FRAME_SIZE, eon_intrinsics
+from common.transformations.model import (MODEL_CX, MODEL_CY, MODEL_INPUT_SIZE,
+                                          get_camera_frame_from_model_frame)
 from selfdrive.car.toyota.interface import CarInterface as ToyotaInterface
-from common.transformations.model import get_camera_frame_from_model_frame
+from selfdrive.config import RADAR_TO_CENTER
+from selfdrive.config import UIParams as UP
+from selfdrive.controls.lib.latcontrol_helpers import (compute_path_pinv,
+                                                       model_polyfit)
+from selfdrive.controls.lib.vehicle_model import VehicleModel
+from selfdrive.messaging import recv_one, recv_one_or_none, sub_sock
+from selfdrive.services import service_list
+from tools.lib.lazy_property import lazy_property
+from tools.replay.lib.ui_helpers import (draw_lead_car, draw_lead_on, draw_mpc,
+                                         draw_path, draw_steer_path,
+                                         init_plots, to_lid_pt, warp_points)
+
+os.environ['BASEDIR'] = BASEDIR
 
 ANGLE_SCALE = 5.0
 HOR = os.getenv("HORIZONTAL") is not None
@@ -132,7 +138,7 @@ def plot_model(m, VM, v_ego, curvature, imgw, calibration, top_down, d_poly, top
     draw_path(dpath_y, _PATH_X, RED, imgw, calibration, top_down, RED)
 
   # draw user path from curvature
-  # draw_steer_path(v_ego, curvature, BLUE, imgw, calibration, top_down, VM, BLUE)
+  draw_steer_path(v_ego, curvature, BLUE, imgw, calibration, top_down, VM, BLUE)
 
 
 def maybe_update_radar_points(lt, lid_overlay):
