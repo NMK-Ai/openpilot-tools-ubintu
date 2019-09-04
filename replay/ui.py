@@ -16,8 +16,8 @@ from common.transformations.model import (MODEL_CX, MODEL_CY, MODEL_INPUT_SIZE,
 from selfdrive.car.toyota.interface import CarInterface as ToyotaInterface
 from selfdrive.config import RADAR_TO_CENTER
 from selfdrive.config import UIParams as UP
-from selfdrive.controls.lib.latcontrol_helpers import (compute_path_pinv,
-                                                       model_polyfit)
+from selfdrive.controls.lib.lane_planner import (compute_path_pinv,
+                                                 model_polyfit)
 from selfdrive.controls.lib.vehicle_model import VehicleModel
 from selfdrive.messaging import recv_one, recv_one_or_none, sub_sock
 from selfdrive.services import service_list
