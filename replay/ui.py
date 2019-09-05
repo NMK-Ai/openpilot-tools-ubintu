@@ -231,7 +231,7 @@ def ui_thread(addr, frame_address):
   liveParameters = sub_sock(service_list['liveParameters'].port, addr=addr, conflate=True)
   pathPlan = sub_sock(service_list['pathPlan'].port, addr=addr, conflate=True)
 
-  v_ego, angle_steers, angle_steers_des, model_bias = 0., 0., 0., 0.
+  v_ego, angle_steers, angle_steers_des = 0., 0., 0.
   params_ao, params_ao_average, params_stiffness, params_sr = None, None, None, None
 
   enabled = False
@@ -361,7 +361,6 @@ def ui_thread(addr, frame_address):
       elif w == 'indiState':
         angle_steers_k = controls_state.controlsState.lateralControlState.indiState.steerAngle
 
-      model_bias = controls_state.controlsState.angleModelBias
       curvature = controls_state.controlsState.curvature
       v_pid = controls_state.controlsState.vPid
       enabled = controls_state.controlsState.enabled
@@ -536,11 +535,6 @@ def ui_thread(addr, frame_address):
     # speed
     v_ego_line = info_font.render("SPEED: " + str(round(v_ego, 1)) + " m/s", True, YELLOW)
     screen.blit(v_ego_line, (write_x, write_y + i * SPACING))
-    i += 1
-
-    # angle offset
-    model_bias_line = info_font.render("MODEL BIAS: " + str(round(model_bias, 2)) + " deg", True, YELLOW)
-    screen.blit(model_bias_line, (write_x, write_y + i * SPACING))
     i += 1
 
     # long control state
