@@ -15,7 +15,7 @@ import traceback
 from collections import namedtuple
 from cereal import car
 from common.params import Params
-from common.lazy_property import lazy_property
+from tools.lib.lazy_property import lazy_property
 from selfdrive.messaging import sub_sock, recv_one_or_none, recv_one
 from selfdrive.services import service_list
 
