@@ -183,7 +183,7 @@ def ui_thread(addr, frame_address):
   context = zmq.Context.instance()
 
   # TODO: Detect car from replay and use that to select carparams
-  CP = ToyotaInterface.get_params("TOYOTA PRIUS 2017", {})
+  CP = ToyotaInterface.get_params("TOYOTA PRIUS 2017")
   VM = VehicleModel(CP)
 
   CalP = np.asarray([[0, 0], [MODEL_INPUT_SIZE[0], 0], [MODEL_INPUT_SIZE[0], MODEL_INPUT_SIZE[1]], [0, MODEL_INPUT_SIZE[1]]])
