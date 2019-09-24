@@ -229,7 +229,7 @@ Usage:
 python carcontrols/joystickd.py
 
 # In another terminal:
-selfdrive/boardd/boardd.py # Make sure the safety setting is hardcoded to ALL_OUTPUT
+selfdrive/boardd/tests/boardd_old.py # Make sure the safety setting is hardcoded to ALL_OUTPUT
 
 # In another terminal:
 python carcontrols/debug_controls.py
