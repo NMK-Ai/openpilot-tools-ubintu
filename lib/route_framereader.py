@@ -35,7 +35,7 @@ class RouteFrameReader(object):
         kwargs: Forwarded to the FrameReader function. If cache_prefix is included, that path
                 will also be used for frame position indices.
     """
-    self._first_camera_idx = next(i for i in xrange(len(camera_paths)) if camera_paths[i] is not None)
+    self._first_camera_idx = next(i for i in range(len(camera_paths)) if camera_paths[i] is not None)
     self._frame_readers = _FrameReaderDict(camera_paths, cache_paths, kwargs)
     self._frame_id_lookup = frame_id_lookup
 
