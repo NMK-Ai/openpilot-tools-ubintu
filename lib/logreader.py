@@ -8,7 +8,7 @@ import tempfile
 import requests
 import subprocess32 as subprocess
 from aenum import Enum
-
+import capnp
 import numpy as np
 
 import platform
