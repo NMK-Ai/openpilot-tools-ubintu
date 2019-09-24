@@ -17,7 +17,10 @@ if platform.system() == "Darwin":
 import libarchive.public
 
 from tools.lib.exceptions import DataUnreadableError
-from tools.lib.filereader import FileReader
+try:
+  from xx.chffr.lib.filereader import FileReader
+except ImportError:
+  from tools.lib.filereader import FileReader
 from tools.lib.log_util import convert_old_pkt_to_new
 from cereal import log as capnp_log
 
