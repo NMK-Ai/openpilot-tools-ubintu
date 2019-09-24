@@ -469,8 +469,7 @@ def _ffmpeg_fcamera_input_for_frame_info(frame_info):
   get_time2 = et-st2
 
   if get_time > 10.0:
-    print "TOOK OVER 10 seconds to fetch", frame_info, get_time, get_time2
-
+    print("TOOK OVER 10 seconds to fetch %r %f %f" % (frame_info, get_time, get_time2))
 
   return prefix, input_data, skip, count
 

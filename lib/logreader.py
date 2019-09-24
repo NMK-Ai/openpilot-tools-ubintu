@@ -12,9 +12,6 @@ import capnp
 import numpy as np
 
 import platform
-if platform.system() == "Darwin":
-  os.environ["LA_LIBRARY_FILEPATH"] = "/usr/local/opt/libarchive/lib/libarchive.dylib"
-import libarchive.public
 
 from tools.lib.exceptions import DataUnreadableError
 try:
@@ -49,7 +46,7 @@ def event_read_multiple_bytes(dat):
   idx = np.append(idx, end_idx)
 
   return [capnp_log.Event.from_bytes(dat[idx[i]:idx[i+1]])
-          for i in xrange(len(idx)-1)]
+          for i in range(len(idx)-1)]
 
 
 # this is an iterator itself, and uses private variables from LogReader
@@ -58,7 +55,7 @@ class MultiLogIterator(object):
     self._log_paths = log_paths
     self._wraparound = wraparound
 
-    self._first_log_idx = next(i for i in xrange(len(log_paths)) if log_paths[i] is not None)
+    self._first_log_idx = next(i for i in range(len(log_paths)) if log_paths[i] is not None)
     self._current_log = self._first_log_idx
     self._idx = 0
     self._log_readers = [None]*len(log_paths)
@@ -67,7 +64,7 @@ class MultiLogIterator(object):
   def _log_reader(self, i):
     if self._log_readers[i] is None and self._log_paths[i] is not None:
       log_path = self._log_paths[i]
-      print "LogReader:", log_path
+      print("LogReader:%s" % log_path)
       self._log_readers[i] = LogReader(log_path)
 
     return self._log_readers[i]
@@ -81,7 +78,7 @@ class MultiLogIterator(object):
       self._idx += 1
     else:
       self._idx = 0
-      self._current_log = next(i for i in xrange(self._current_log + 1, len(self._log_readers) + 1) if i == len(self._log_readers) or self._log_paths[i] is not None)
+      self._current_log = next(i for i in range(self._current_log + 1, len(self._log_readers) + 1) if i == len(self._log_readers) or self._log_paths[i] is not None)
       # wraparound
       if self._current_log == len(self._log_readers):
         if self._wraparound:
@@ -131,6 +128,9 @@ class LogReader(object):
     elif ext == ".bz2":
       dat = bz2.decompress(dat)
     elif ext == ".7z":
+      if platform.system() == "Darwin":
+        os.environ["LA_LIBRARY_FILEPATH"] = "/usr/local/opt/libarchive/lib/libarchive.dylib"
+      import libarchive.public
       with libarchive.public.memory_reader(dat) as aa:
         mdat = []
         for it in aa:
