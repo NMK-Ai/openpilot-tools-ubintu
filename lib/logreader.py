@@ -118,7 +118,7 @@ class MultiLogIterator(object):
 
 
 class LogReader(object):
-  def __init__(self, fn, canonicalize=True):
+  def __init__(self, fn, canonicalize=True, only_union_types=False):
     _, ext = os.path.splitext(fn)
     data_version = None
 
@@ -176,12 +176,19 @@ class LogReader(object):
 
     self.data_version = data_version
     self._do_conversion = needs_conversion and canonicalize
+    self._only_union_types = only_union_types
     self._ents = ents
 
   def __iter__(self):
     for ent in self._ents:
       if self._do_conversion:
         yield convert_old_pkt_to_new(ent, self.data_version)
+      elif self._only_union_types:
+        try:
+          ent.which()
+          yield ent
+        except capnp.lib.capnp.KjException:
+          pass
       else:
         yield ent
 
