@@ -217,6 +217,7 @@ def ui_thread(addr, frame_address):
   frame = context.socket(zmq.SUB)
   frame.connect(frame_address or "tcp://%s:%d" % (addr, service_list['frame'].port))
   frame.setsockopt(zmq.SUBSCRIBE, b"")
+  frame.setsockopt(zmq.CONFLATE, 1)
 
   carState = sub_sock(service_list['carState'].port, addr=addr, conflate=True)
   plan = sub_sock(service_list['plan'].port, addr=addr, conflate=True)
