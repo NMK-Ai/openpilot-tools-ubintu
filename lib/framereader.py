@@ -1000,7 +1000,7 @@ class VideoStreamDecompressor(object):
     self.pix_fmt = pix_fmt
 
     if pix_fmt == "yuv420p":
-      self.out_size = w*h*3/2 # yuv420p
+      self.out_size = w*h*3//2 # yuv420p
     elif pix_fmt in ("rgb24", "yuv444p"):
       self.out_size = w*h*3
     else:
