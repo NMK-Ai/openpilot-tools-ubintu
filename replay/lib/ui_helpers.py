@@ -49,7 +49,7 @@ def draw_path(y, x, color, img, calibration, top_down, lid_color=None):
   # find color in 8 bit
   if lid_color is not None and top_down is not None:
     tcolor = find_color(top_down[0], lid_color)
-    for i in xrange(len(x)):
+    for i in range(len(x)):
       px, py = to_lid_pt(x[i], y[i])
       if px != -1:
         top_down[1][px, py] = tcolor
