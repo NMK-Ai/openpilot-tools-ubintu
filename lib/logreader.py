@@ -6,7 +6,7 @@ import json
 import bz2
 import tempfile
 import requests
-import subprocess32 as subprocess
+import subprocess
 from aenum import Enum
 import capnp
 import numpy as np

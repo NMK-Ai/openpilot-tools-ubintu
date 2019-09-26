@@ -17,7 +17,7 @@ else:
   import cPickle as pickle
   from cStringIO import StringIO
 
-import subprocess32 as subprocess
+import subprocess
 from aenum import Enum
 from lru import LRU
 from functools import wraps
