@@ -16,7 +16,8 @@ else:
   import Queue as queue
   import cPickle as pickle
   from cStringIO import StringIO
-import subprocess32 as subprocess
+
+import subprocess
 from aenum import Enum
 from lru import LRU
 from functools import wraps
@@ -31,7 +32,6 @@ except ImportError:
 from tools.lib.file_helpers import atomic_write_in_dir
 from tools.lib.mkvparse import mkvindex
 from tools.lib.route import Route
-
 
 H264_SLICE_P = 0
 H264_SLICE_B = 1
@@ -1000,7 +1000,7 @@ class VideoStreamDecompressor(object):
     self.pix_fmt = pix_fmt
 
     if pix_fmt == "yuv420p":
-      self.out_size = w*h*3/2 # yuv420p
+      self.out_size = w*h*3//2 # yuv420p
     elif pix_fmt in ("rgb24", "yuv444p"):
       self.out_size = w*h*3
     else:

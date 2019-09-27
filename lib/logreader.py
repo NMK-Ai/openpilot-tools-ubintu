@@ -6,7 +6,7 @@ import json
 import bz2
 import tempfile
 import requests
-import subprocess32 as subprocess
+import subprocess
 from aenum import Enum
 import capnp
 import numpy as np
@@ -28,7 +28,7 @@ def index_log(fn):
   index_log = os.path.join(index_log_dir, "index_log")
   phonelibs_dir = os.path.join(OP_PATH, 'phonelibs')
 
-  subprocess.check_call(["make", "PHONELIBS=" + phonelibs_dir], cwd=index_log_dir, stdout=open("/dev/null","w"))
+  subprocess.check_call(["make", "PHONELIBS=" + phonelibs_dir], cwd=index_log_dir, stdout=subprocess.DEVNULL)
 
   try:
     dat = subprocess.check_output([index_log, fn, "-"])
@@ -86,7 +86,7 @@ class MultiLogIterator(object):
         else:
           raise StopIteration
 
-  def next(self):
+  def __next__(self):
     while 1:
       lr = self._log_reader(self._current_log)
       ret = lr._ents[self._idx]

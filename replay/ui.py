@@ -147,7 +147,7 @@ def maybe_update_radar_points(lt, lid_overlay):
     ar_pts = {}
     for track in lt.liveTracks:
       ar_pts[track.trackId] = [track.dRel + RADAR_TO_CENTER, track.yRel, track.vRel, track.aRel, track.oncoming, track.stationary]
-  for ids, pt in ar_pts.viewitems():
+  for ids, pt in ar_pts.items():
     px, py = to_lid_pt(pt[0], pt[1])
     if px != -1:
       if pt[-1]:
@@ -216,7 +216,8 @@ def ui_thread(addr, frame_address):
 
   frame = context.socket(zmq.SUB)
   frame.connect(frame_address or "tcp://%s:%d" % (addr, service_list['frame'].port))
-  frame.setsockopt(zmq.SUBSCRIBE, "")
+  frame.setsockopt(zmq.SUBSCRIBE, b"")
+  frame.setsockopt(zmq.CONFLATE, 1)
 
   carState = sub_sock(service_list['carState'].port, addr=addr, conflate=True)
   plan = sub_sock(service_list['plan'].port, addr=addr, conflate=True)
@@ -504,7 +505,7 @@ def ui_thread(addr, frame_address):
       cpw = warp_points(CalP, calibration.model_to_bb)
       vanishing_pointw = warp_points(vanishing_point, calibration.model_to_bb)
       pygame.draw.polygon(screen, BLUE, tuple(map(tuple, cpw)), 1)
-      pygame.draw.circle(screen, BLUE, map(int, map(round, vanishing_pointw[0])), 2)
+      pygame.draw.circle(screen, BLUE, list(map(int, map(round, vanishing_pointw[0]))), 2)
 
     if HOR:
       screen.blit(draw_plots(plot_arr), (640+384, 0))
