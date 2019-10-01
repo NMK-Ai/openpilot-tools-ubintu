@@ -2,6 +2,7 @@
 import argparse
 import os
 import sys
+import gc
 
 os.environ["OMP_NUM_THREADS"] = "1"
 
@@ -17,7 +18,7 @@ from common.transformations.model import (MODEL_CX, MODEL_CY, MODEL_INPUT_SIZE,
 from selfdrive.car.toyota.interface import CarInterface as ToyotaInterface
 from selfdrive.config import UIParams as UP
 from selfdrive.controls.lib.vehicle_model import VehicleModel
-from selfdrive.messaging import SubMaster, recv_one
+from selfdrive.messaging import SubMaster, recv_one_or_none, recv_one
 from selfdrive.services import service_list
 from tools.replay.lib.ui_helpers import (_BB_TO_FULL_FRAME, BLACK, BLUE, GREEN,
                                          YELLOW, RED,
@@ -36,6 +37,7 @@ HOR = os.getenv("HORIZONTAL") is not None
 
 
 def ui_thread(addr, frame_address):
+  gc.disable()
   context = zmq.Context.instance()
 
   # TODO: Detect car from replay and use that to select carparams
@@ -65,7 +67,7 @@ def ui_thread(addr, frame_address):
   alert2_font = pygame.font.SysFont("arial", 20)
   info_font = pygame.font.SysFont("arial", 15)
 
-  camera_surface = pygame.surface.Surface((640, 480), 0, 24).convert()
+  camera_surface = pygame.surface.Surface((582, 437), 0, 24).convert()
   cameraw_surface = pygame.surface.Surface(MODEL_INPUT_SIZE, 0, 24).convert()
   cameraw_test_surface = pygame.surface.Surface(MODEL_INPUT_SIZE, 0, 24)
   top_down_surface = pygame.surface.Surface((UP.lidar_x, UP.lidar_y),0,8)
@@ -78,8 +80,9 @@ def ui_thread(addr, frame_address):
   sm = SubMaster(['carState', 'plan', 'carControl', 'radarState', 'liveCalibration', 'controlsState', 'liveTracks', 'model', 'liveMpc', 'liveParameters', 'pathPlan'])
 
   calibration = None
-  img = np.zeros((480, 640, 3), dtype='uint8')
+
   imgff = np.zeros((FULL_FRAME_SIZE[1], FULL_FRAME_SIZE[0], 3), dtype=np.uint8)
+  img = np.zeros((FULL_FRAME_SIZE[1] // 2, FULL_FRAME_SIZE[0] // 2, 3), dtype='uint8')
   imgw = np.zeros((160, 320, 3), dtype=np.uint8)  # warped image
   lid_overlay_blank = get_blank_lid_overlay(UP)
 
@@ -119,7 +122,6 @@ def ui_thread(addr, frame_address):
 
   draw_plots = init_plots(plot_arr, name_to_arr_idx, plot_xlims, plot_ylims, plot_names, plot_colors, plot_styles, bigplots=True)
 
-  counter = 0
   while 1:
     list(pygame.event.get())
 
@@ -145,13 +147,9 @@ def ui_thread(addr, frame_address):
     if rgb_img_raw and len(rgb_img_raw) == FULL_FRAME_SIZE[0] * FULL_FRAME_SIZE[1] * 3:
       imgff = np.frombuffer(rgb_img_raw, dtype=np.uint8).reshape((FULL_FRAME_SIZE[1], FULL_FRAME_SIZE[0], 3))
       imgff = imgff[:, :, ::-1] # Convert BGR to RGB
-      cv2.warpAffine(imgff, np.dot(img_transform, _BB_TO_FULL_FRAME)[:2],
-        (img.shape[1], img.shape[0]), dst=img, flags=cv2.WARP_INVERSE_MAP)
+      img = imgff[::2, ::2, :]
 
       intrinsic_matrix = eon_intrinsics
-    else:
-      img.fill(0)
-      intrinsic_matrix = np.eye(3)
 
     if calibration is not None:
       transform = np.dot(img_transform, calibration.model_to_full_frame)
@@ -207,15 +205,11 @@ def ui_thread(addr, frame_address):
 
     # draw red pt for lead car in the main img
     for lead in [sm['radarState'].leadOne, sm['radarState'].leadTwo]:
-      if lead.status:
-        if calibration is not None:
-          draw_lead_on(img, lead.dRel, lead.yRel, calibration, color=(192,0,0))
-
         draw_lead_car(lead.dRel, top_down)
 
     # *** blits ***
     pygame.surfarray.blit_array(camera_surface, img.swapaxes(0,1))
-    screen.blit(camera_surface, (0, 0))
+    screen.blit(camera_surface, (29, 0))
 
     # display alerts
     alert_line1 = alert1_font.render(sm['controlsState'].alertText1, True, (255,0,0))
@@ -223,19 +217,13 @@ def ui_thread(addr, frame_address):
     screen.blit(alert_line1, (180, 150))
     screen.blit(alert_line2, (180, 190))
 
-    if calibration is not None and img is not None:
-      cpw = warp_points(CalP, calibration.model_to_bb)
-      vanishing_pointw = warp_points(vanishing_point, calibration.model_to_bb)
-      pygame.draw.polygon(screen, BLUE, tuple(map(tuple, cpw)), 1)
-      pygame.draw.circle(screen, BLUE, list(map(int, map(round, vanishing_pointw[0]))), 2)
-
     if HOR:
       screen.blit(draw_plots(plot_arr), (640+384, 0))
     else:
       screen.blit(draw_plots(plot_arr), (0, 600))
 
     pygame.surfarray.blit_array(cameraw_surface, imgw.swapaxes(0, 1))
-    screen.blit(cameraw_surface, (320, 480))
+    screen.blit(cameraw_surface, (320 - 160, 437))
 
     pygame.surfarray.blit_array(*top_down)
     screen.blit(top_down[0], (640,0))
