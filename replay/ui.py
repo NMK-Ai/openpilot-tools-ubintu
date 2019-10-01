@@ -73,7 +73,6 @@ def ui_thread(addr, frame_address):
   frame = context.socket(zmq.SUB)
   frame.connect(frame_address or "tcp://%s:%d" % (addr, service_list['frame'].port))
   frame.setsockopt(zmq.SUBSCRIBE, b"")
-  frame.setsockopt(zmq.CONFLATE, 1)
 
 
   sm = SubMaster(['carState', 'plan', 'carControl', 'radarState', 'liveCalibration', 'controlsState', 'liveTracks', 'model', 'liveMpc', 'liveParameters', 'pathPlan'])
