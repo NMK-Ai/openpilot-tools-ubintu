@@ -71,9 +71,9 @@ def ui_thread(addr, frame_address):
   top_down_surface = pygame.surface.Surface((UP.lidar_x, UP.lidar_y),0,8)
 
   frame = context.socket(zmq.SUB)
+  frame.setsockopt(zmq.CONFLATE, 1)
   frame.connect(frame_address or "tcp://%s:%d" % (addr, service_list['frame'].port))
   frame.setsockopt(zmq.SUBSCRIBE, b"")
-
 
   sm = SubMaster(['carState', 'plan', 'carControl', 'radarState', 'liveCalibration', 'controlsState', 'liveTracks', 'model', 'liveMpc', 'liveParameters', 'pathPlan'])
 
