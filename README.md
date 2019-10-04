@@ -24,7 +24,7 @@ Table of Contents
 Requirements
 ============
 
-openpilot-tools and the following setup steps are developed and tested on Ubuntu 16.04, MacOS 10.14.2 and Python 2.7.
+openpilot-tools and the following setup steps are developed and tested on Ubuntu 16.04, MacOS 10.14.2 and Python 3.7.3.
 
 Setup
 ============
