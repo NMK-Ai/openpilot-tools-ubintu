@@ -9,6 +9,11 @@ import time
 import zmq
 
 
+# tool to plot one or more signals live. Call ex:
+#./rqplot.py log.carState.vEgo log.carState.aEgo
+
+# TODO: can this tool be made a lot less cpu consuming?
+
 def recursive_getattr(x, name):
    l = name.split('.')
    if len(l) == 1:
