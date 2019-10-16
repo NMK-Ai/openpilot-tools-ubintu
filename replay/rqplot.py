@@ -9,6 +9,11 @@ import time
 import zmq
 
 
+# tool to plot one or more signals live. Call ex:
+#./rqplot.py log.carState.vEgo log.carState.aEgo
+
+# TODO: can this tool be made a lot less cpu consuming?
+
 def recursive_getattr(x, name):
    l = name.split('.')
    if len(l) == 1:
@@ -55,11 +60,11 @@ if __name__ == "__main__":
   ax.set_xlabel('time [s]')
 
   while 1:
-    print 1./(time.time() - cur_t)
+    print(1./(time.time() - cur_t))
     cur_t = time.time()
     for i, s in enumerate(subs):
-      #msg = messaging.recv_sock(s)
-      msg = messaging.recv_one_or_none(s)
+      msg = messaging.recv_sock(s)
+      #msg = messaging.recv_one_or_none(s)
       if msg is not None:
         x[i] = np.append(x[i], getattr(msg, 'logMonoTime') / float(1e9))
         x[i] = np.delete(x[i], 0)
@@ -76,5 +81,5 @@ if __name__ == "__main__":
     fig.canvas.flush_events()
 
     # just a bit of wait to avoid 100% CPU usage
-    time.sleep(0.0001)
+    time.sleep(0.001)
 
