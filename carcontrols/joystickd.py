@@ -54,12 +54,12 @@ def joystick_thread():
       axes.append(joystick.get_axis(a))
 
     for b in range(joystick.get_numbuttons()):
-      buttons.append(joystick.get_button(b))
+      buttons.append(bool(joystick.get_button(b)))
 
     dat = messaging.new_message()
     dat.init('testJoystick')
     dat.testJoystick.axes = axes
-    dat.testJoystick.buttons = map(bool, buttons)
+    dat.testJoystick.buttons = buttons
     joystick_sock.send(dat.to_bytes())
 
     # Limit to 100 frames per second
