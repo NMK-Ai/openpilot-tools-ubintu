@@ -8,7 +8,6 @@ os.environ["OMP_NUM_THREADS"] = "1"
 import cv2
 import numpy as np
 import pygame
-import zmq
 
 from common.basedir import BASEDIR
 from common.transformations.camera import FULL_FRAME_SIZE, eon_intrinsics
@@ -17,8 +16,7 @@ from common.transformations.model import (MODEL_CX, MODEL_CY, MODEL_INPUT_SIZE,
 from selfdrive.car.toyota.interface import CarInterface as ToyotaInterface
 from selfdrive.config import UIParams as UP
 from selfdrive.controls.lib.vehicle_model import VehicleModel
-from selfdrive.messaging import SubMaster, recv_one
-from selfdrive.services import service_list
+import selfdrive.messaging as messaging
 from tools.replay.lib.ui_helpers import (_BB_TO_FULL_FRAME, BLACK, BLUE, GREEN,
                                          YELLOW, RED,
                                          CalibrationTransformsForWarpMatrix,
@@ -36,8 +34,6 @@ HOR = os.getenv("HORIZONTAL") is not None
 
 
 def ui_thread(addr, frame_address):
-  context = zmq.Context.instance()
-
   # TODO: Detect car from replay and use that to select carparams
   CP = ToyotaInterface.get_params("TOYOTA PRIUS 2017")
   VM = VehicleModel(CP)
@@ -70,12 +66,8 @@ def ui_thread(addr, frame_address):
   cameraw_test_surface = pygame.surface.Surface(MODEL_INPUT_SIZE, 0, 24)
   top_down_surface = pygame.surface.Surface((UP.lidar_x, UP.lidar_y),0,8)
 
-  frame = context.socket(zmq.SUB)
-  frame.setsockopt(zmq.CONFLATE, 1)
-  frame.connect(frame_address or "tcp://%s:%d" % (addr, service_list['frame'].port))
-  frame.setsockopt(zmq.SUBSCRIBE, b"")
-
-  sm = SubMaster(['carState', 'plan', 'carControl', 'radarState', 'liveCalibration', 'controlsState', 'liveTracks', 'model', 'liveMpc', 'liveParameters', 'pathPlan'])
+  frame = messaging.sub_sock('frame', addr=addr, conflate=True)
+  sm = messaging.SubMaster(['carState', 'plan', 'carControl', 'radarState', 'liveCalibration', 'controlsState', 'liveTracks', 'model', 'liveMpc', 'liveParameters', 'pathPlan'])
 
   calibration = None
   img = np.zeros((480, 640, 3), dtype='uint8')
@@ -128,7 +120,7 @@ def ui_thread(addr, frame_address):
     top_down = top_down_surface, lid_overlay
 
     # ***** frame *****
-    fpkt = recv_one(frame)
+    fpkt = messaging.recv_one(frame)
     rgb_img_raw = fpkt.frame.image
 
     if fpkt.frame.transform:
