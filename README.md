@@ -249,7 +249,7 @@ Connect 2 pandas to the debug board. A panda connects to the PC, the other panda
 Usage:
 ```
 # With MOCK=1 boardd will read logged can messages from a replay and send them to the panda.
-MOCK=1 tools/replay/boardd.py
+MOCK=1 selfdrive/boardd/tests/boardd_old.py
 
 # In another terminal:
 python replay/unlogger.py <route-name> <path-to-data-directory>
