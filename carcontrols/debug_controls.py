@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import struct
-import zmq
 import time
 from common.numpy_fast import clip
 from copy import copy
@@ -11,7 +10,7 @@ from selfdrive.boardd.boardd import can_list_to_can_capnp
 
 
 def steer_thread():
-  poller = zmq.Poller()
+  poller = messaging.Poller()
 
   logcan = messaging.sub_sock('can')
   joystick_sock = messaging.sub_sock('testJoystick', conflate=True, poller=poller)
@@ -31,7 +30,7 @@ def steer_thread():
   while True:
 
     # send
-    for socket, event in poller.poll(0):
+    for socket in poller.poll(0):
       if socket is joystick_sock:
         joystick = messaging.recv_one(socket)
 
