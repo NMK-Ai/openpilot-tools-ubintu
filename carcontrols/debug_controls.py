@@ -4,7 +4,6 @@ import zmq
 import time
 from common.numpy_fast import clip
 from copy import copy
-from selfdrive.services import service_list
 from cereal import car
 import selfdrive.messaging as messaging
 from selfdrive.car.car_helpers import get_car
@@ -14,12 +13,12 @@ from selfdrive.boardd.boardd import can_list_to_can_capnp
 def steer_thread():
   poller = zmq.Poller()
 
-  logcan = messaging.sub_sock(service_list['can'].port)
-  joystick_sock = messaging.sub_sock(service_list['testJoystick'].port, conflate=True, poller=poller)
+  logcan = messaging.sub_sock('can')
+  joystick_sock = messaging.sub_sock('testJoystick', conflate=True, poller=poller)
 
-  carstate = messaging.pub_sock(service_list['carState'].port)
-  carcontrol = messaging.pub_sock(service_list['carControl'].port)
-  sendcan = messaging.pub_sock(service_list['sendcan'].port)
+  carstate = messaging.pub_sock('carState')
+  carcontrol = messaging.pub_sock('carControl')
+  sendcan = messaging.pub_sock('sendcan')
 
   button_1_last = 0
   enabled = False
