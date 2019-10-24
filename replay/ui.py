@@ -179,9 +179,10 @@ def ui_thread(addr, frame_address):
     plot_arr[-1, name_to_arr_idx['accel_override']] = sm['carControl'].cruiseControl.accelOverride
 
     # ***** model ****
-    model_data = extract_model_data(sm['model'])
-    plot_model(model_data, VM, sm['controlsState'].vEgo, sm['controlsState'].curvature, imgw, calibration,
-                top_down, np.array(sm['pathPlan'].dPoly))
+    if len(sm['model'].path.poly) > 0:
+      model_data = extract_model_data(sm['model'])
+      plot_model(model_data, VM, sm['controlsState'].vEgo, sm['controlsState'].curvature, imgw, calibration,
+                  top_down, np.array(sm['pathPlan'].dPoly))
 
     # MPC
     if sm.updated['liveMpc']:
