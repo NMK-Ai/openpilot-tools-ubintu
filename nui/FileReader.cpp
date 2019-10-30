@@ -74,7 +74,7 @@ void LogReader::readyRead() {
     qDebug() << "got" << dat.size() << "with" << bStream.avail_out << "size" << raw.size();
 
     // support growth
-    // TODO: this will break underlying pointers
+    // TODO: this will break underlying pointers, need to fix
     /*size_t old_size = raw.size();
     if (old_size/2 > bStream.avail_out) {
       qDebug() << "resizing";
@@ -86,26 +86,20 @@ void LogReader::readyRead() {
 
   int dled = raw.size() - bStream.avail_out;
   auto amsg = kj::arrayPtr((const capnp::word*)(raw.data() + event_offset), (dled-event_offset)/sizeof(capnp::word));
+  Events events_local;
+
   while (amsg.size() > 0) {
     try {
       capnp::FlatArrayMessageReader cmsg = capnp::FlatArrayMessageReader(amsg);
 
-      // this needed?
+      // this needed? it is
       capnp::FlatArrayMessageReader *tmsg =
         new capnp::FlatArrayMessageReader(kj::arrayPtr(amsg.begin(), cmsg.getEnd()));
 
       amsg = kj::arrayPtr(cmsg.getEnd(), amsg.end());
 
-      //auto mm = capnp::MallocMessageBuilder(cmsg.to_builder());
-      //printf("%d %llu\n", event_offset, event.getLogMonoTime());
-
       cereal::Event::Reader event = tmsg->getRoot<cereal::Event>();
-      events->insert(event.getLogMonoTime(), event);
-
-      /*if (event.which() == cereal::Event::CONTROLS_STATE) {
-        auto controlsState = event.getControlsState();
-        float vEgo = controlsState.getVEgo();     
-      }*/
+      events_local.insert(event.getLogMonoTime(), event);
 
       // increment
       event_offset = (char*)cmsg.getEnd() - raw.data();
@@ -115,12 +109,16 @@ void LogReader::readyRead() {
     }
   }
 
+  // merge in events
+  // TODO: add lock
+  *events += events_local;
+
   printf("parsed %d into %d events with offset %d\n", dled, events->size(), event_offset);
 }
 
 void LogReader::done() {
-  uint64_t t0 = events->begin().key();
-  uint64_t t1 = (events->end()-1).key();
+  //uint64_t t0 = events->begin().key();
+  //uint64_t t1 = (events->end()-1).key();
   /*printf("paint event: %lu %lu e %lu\n", t0, t1, t1-t0);*/
 
   /*uint64_t t = events->begin().value().getLogMonoTime();

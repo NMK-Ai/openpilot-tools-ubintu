@@ -112,14 +112,13 @@ int main(int argc, char *argv[]) {
 
   Window window;
 
-  LogReader lr2(route+"/2/rlog.bz2", &events);
-  /*LogReader lr0(route+"/0/rlog.bz2", &events);
-  LogReader lr1(route+"/1/rlog.bz2", &events);
-  LogReader lr3(route+"/3/rlog.bz2", &events);
-  LogReader lr4(route+"/4/rlog.bz2", &events);
-  LogReader lr5(route+"/5/rlog.bz2", &events);
-  LogReader lr6(route+"/6/rlog.bz2", &events);*/
-
+  QVector<LogReader*> lrs;
+  //for (int i = 0; i <= 6; i++) {
+  for (int i = 2; i <= 2; i++) {
+    QString fn = QString("%1/%2/rlog.bz2").arg(route).arg(i);
+    LogReader *lr = new LogReader(fn, &events);
+    lrs.append(lr);
+  }
 
   window.resize(250, 150);
   window.setWindowTitle("Simple example");

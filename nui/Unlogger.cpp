@@ -6,7 +6,7 @@
 
 Unlogger::Unlogger(Events *events_) : events(events_) {
   ctx = Context::create();
-  YAML::Node service_list = YAML::LoadFile("/home/batman/one/selfdrive/service_list.yaml");
+  YAML::Node service_list = YAML::LoadFile("../..//selfdrive/service_list.yaml");
   for (const auto& it : service_list) {
     auto name = it.first.as<std::string>();
     PubSocket *sock = PubSocket::create(ctx, name);
@@ -37,27 +37,30 @@ void Unlogger::process() {
   }
   qDebug() << "got events";
 
-  t0 = (events->begin()+1).key();
+  QElapsedTimer timer;
+  timer.start();
+  uint64_t t0 = (events->begin()+1).key();
+
   for (auto e : *events) {
     auto type = e.which();
     uint64_t tm = e.getLogMonoTime();
     auto it = socks.find(type);
+    tc = tm;
     if (it != socks.end()) {
-      float etime = (tm-t0)*1e-3;
-      QThread::usleep(etime);
+      long etime = (tm-t0);
+      long us_behind = ((etime-timer.nsecsElapsed())*1e-3)+0.5;
+      if (us_behind > 0) {
+        QThread::usleep(us_behind);
+        //qDebug() << "sleeping" << us_behind << etime << timer.nsecsElapsed();
+      }
 
       capnp::MallocMessageBuilder msg;
-      //auto ee = msg.initRoot<cereal::Event>();
-      //ee = e.asBuilder();
       msg.setRoot(e);
-
       auto words = capnp::messageToFlatArray(msg);
       auto bytes = words.asBytes();
 
       // TODO: Can PubSocket take a const char?
       (*it)->send((char*)bytes.begin(), bytes.size());
-
-      t0 = tm;
     }
   }
   emit finished();

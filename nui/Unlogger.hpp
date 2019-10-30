@@ -9,7 +9,7 @@ class Unlogger : public QObject {
 Q_OBJECT
   public:
     Unlogger(Events *events_);
-    uint64_t getCurrentTime() { return t0; }
+    uint64_t getCurrentTime() { return tc; }
   public slots:
     void process();
   signals:
@@ -18,7 +18,7 @@ Q_OBJECT
     Events *events;
     QMap<int, PubSocket*> socks;
     Context *ctx;
-    uint64_t t0;
+    uint64_t tc;
 };
 
 #endif
