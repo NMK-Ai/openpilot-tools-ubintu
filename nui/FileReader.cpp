@@ -105,7 +105,8 @@ void LogReader::readyRead() {
       // increment
       event_offset = (char*)cmsg.getEnd() - raw.data();
     } catch (const kj::Exception& e) {
-      qDebug() << e.getDescription().cStr();
+      // partial messages trigger this
+      //qDebug() << e.getDescription().cStr();
       break;
     }
   }
@@ -134,5 +135,12 @@ void LogReader::done() {
       printf("%lld : %f\n", e.getLogMonoTime()-t0, vEgo);
     }
   }*/
+}
+
+FrameReader::FrameReader(const QString& file) : FileReader(file) {
+}
+
+void FrameReader::readyRead() {
+  QByteArray dat = reply->readAll();
 }
 

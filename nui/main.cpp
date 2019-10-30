@@ -25,12 +25,10 @@ void Scrollbar::paintEvent(QPaintEvent *event) {
   //QPainter painter(this);
 }*/
 
-// TODO: This is not thread safe
-Events events;
 
 class Window : public QWidget {
   public:
-    Window();
+    Window(QString route_);
   protected:
     void mousePressEvent(QMouseEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
@@ -39,9 +37,15 @@ class Window : public QWidget {
   private:
     int timeToPixel(uint64_t ns);
     uint64_t pixelToTime(int px);
+    QString route;
+
+    // TODO: This is not thread safe
+    Events events;
+    QVector<LogReader*> lrs;
+    QVector<FrameReader*> frs;
 };
 
-Window::Window() {
+Window::Window(QString route_) : route(route_) {
   //QPushButton *quitBtn = new QPushButton("Quit", this);
   //quitBtn->setGeometry(50, 40, 75, 30);
 
@@ -54,6 +58,15 @@ Window::Window() {
   connect(thread, SIGNAL (started()), unlogger, SLOT (process()));
   connect(unlogger, SIGNAL (elapsed()), this, SLOT (update()));
   thread->start();
+
+  //for (int i = 0; i <= 6; i++) {
+  for (int i = 2; i <= 2; i++) {
+    QString fn = QString("%1/%2/rlog.bz2").arg(route).arg(i);
+    lrs.append(new LogReader(fn, &events));
+    /*QString frn = QString("%1/%2/fcamera.hevc").arg(route).arg(i);
+    frs.append(new FrameReader(frn));*/
+  }
+
 }
 
 int Window::timeToPixel(uint64_t ns) {
@@ -90,6 +103,7 @@ void Window::paintEvent(QPaintEvent *event) {
   p.setBrush(Qt::cyan);
   //p.drawRect(0, 0, 600, 100);
 
+  // TODO: we really don't have to redraw this every time, only on updates to events
   int lt = -1;
   int lvv = 0;
   for (auto e : events) {
@@ -130,7 +144,7 @@ void Window::paintEvent(QPaintEvent *event) {
 
   p.end();
 
-  if (timer.elapsed() > 50) {
+  if (timer.elapsed() > 100) {
     qDebug() << "paint in" << timer.elapsed() << "ms";
   }
 }
@@ -139,22 +153,15 @@ int main(int argc, char *argv[]) {
   QApplication app(argc, argv);
 
   QString route(argv[1]);
-  //route = "0006c839f32a6f99/2019-02-18--06-21-29";
-  //route = "02ec6bea180a4d36/2019-10-25--10-18-09";
-  route = "3a5d6ac1c23e5536/2019-10-29--10-06-58";
-
-  Window window;
-
-  QVector<LogReader*> lrs;
-  for (int i = 2; i <= 2; i++) {
-  //for (int i = 0; i <= 6; i++) {
-    QString fn = QString("%1/%2/rlog.bz2").arg(route).arg(i);
-    LogReader *lr = new LogReader(fn, &events);
-    lrs.append(lr);
+  if (route == "") {
+    route = "3a5d6ac1c23e5536/2019-10-29--10-06-58";
+    //route = "0006c839f32a6f99/2019-02-18--06-21-29";
+    //route = "02ec6bea180a4d36/2019-10-25--10-18-09";
   }
 
-  window.resize(250, 150);
-  window.setWindowTitle("Simple example");
+  Window window(route);
+  window.resize(1920, 600);
+  window.setWindowTitle("nui unlogger");
   window.show();
 
   return app.exec();

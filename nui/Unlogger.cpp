@@ -1,30 +1,37 @@
 #include <string>
 #include <vector>
 #include <yaml-cpp/yaml.h>
+#include <capnp/dynamic.h>
+#include <capnp/schema.h>
+
+// include the dynamic struct 
+#include "cereal/gen/cpp/car.capnp.c++"
+#include "cereal/gen/cpp/log.capnp.c++"
 
 #include "Unlogger.hpp"
 
 Unlogger::Unlogger(Events *events_) : events(events_) {
   ctx = Context::create();
   YAML::Node service_list = YAML::LoadFile("../..//selfdrive/service_list.yaml");
+
   for (const auto& it : service_list) {
     auto name = it.first.as<std::string>();
     PubSocket *sock = PubSocket::create(ctx, name);
 
     qDebug() << name.c_str();
 
-    // TODO: is there a better way to do this?
-    int type = -1;
-    if (name == "controlsState") {
-      type = cereal::Event::CONTROLS_STATE;
-    } else if (name == "frame") {
-      type = cereal::Event::FRAME;
-    } else if (name == "sensorEvents") {
-      type = cereal::Event::SENSOR_EVENTS;
-    }
+    for (auto field: capnp::Schema::from<cereal::Event>().getFields()) {
+      std::string tname = field.getProto().getName();
 
-    if (type != -1) {
-      socks.insert(type, sock);
+      if (tname == name) {
+        // TODO: I couldn't figure out how to get the which, only the index, hence this hack
+        int type = field.getIndex();
+        if (type > 67) type--; // valid
+        type--; // logMonoTime
+
+        //qDebug() << "here" << tname.c_str() << type << cereal::Event::CONTROLS_STATE;
+        socks.insert(type, sock);
+      }
     }
   }
 }
@@ -62,7 +69,7 @@ void Unlogger::process() {
         }
       }
 
-      if (abs(tc-last_elapsed) > 50e6) {
+      if (abs(tc-last_elapsed) > 100e6) {
         //qDebug() << "elapsed";
         emit elapsed();
         last_elapsed = tc;
@@ -79,7 +86,10 @@ void Unlogger::process() {
         long us_behind = ((etime-rtime)*1e-3)+0.5;
         if (us_behind > 0) {
           if (us_behind > 1e6) {
-            qWarning() << "OVER ONE SECOND BEHIND" << us_behind;
+            qWarning() << "OVER ONE SECOND BEHIND, HACKING" << us_behind;
+            us_behind = 0;
+            t0 = tm;
+            t0r = timer.nsecsElapsed();
           }
           QThread::usleep(us_behind);
           //qDebug() << "sleeping" << us_behind << etime << timer.nsecsElapsed();

@@ -47,5 +47,12 @@ private:
   Events *events;
 };
 
+class FrameReader : public FileReader {
+public:
+  FrameReader(const QString& file);
+  void readyRead();
+private:
+};
+
 #endif
 
