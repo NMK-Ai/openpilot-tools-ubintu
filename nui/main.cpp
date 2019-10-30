@@ -6,6 +6,7 @@
 #include <QGraphicsScene>
 #include <QPainter>
 #include <QThread>
+#include <QMouseEvent>
 
 #include "FileReader.hpp"
 #include "Unlogger.hpp"
@@ -31,9 +32,13 @@ class Window : public QWidget {
   public:
     Window();
   protected:
+    void mousePressEvent(QMouseEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
     uint64_t ct;
-    Unlogger *worker;
+    Unlogger *unlogger;
+  private:
+    int timeToPixel(uint64_t ns);
+    uint64_t pixelToTime(int px);
 };
 
 Window::Window() {
@@ -44,10 +49,33 @@ Window::Window() {
   //sb->setGeometry(0, 0, 200, 100);
 
   QThread* thread = new QThread;
-  worker = new Unlogger(&events);
-  worker->moveToThread(thread);
-  connect(thread, SIGNAL (started()), worker, SLOT (process()));
+  unlogger = new Unlogger(&events);
+  unlogger->moveToThread(thread);
+  connect(thread, SIGNAL (started()), unlogger, SLOT (process()));
+  connect(unlogger, SIGNAL (elapsed()), this, SLOT (update()));
   thread->start();
+}
+
+int Window::timeToPixel(uint64_t ns) {
+  // TODO: make this dynamic
+  return int(ns*1e-9*4.0+0.5);
+}
+
+uint64_t Window::pixelToTime(int px) {
+  // TODO: make this dynamic
+  //printf("%d\n", px);
+  return ((px+0.5)/4.0) * 1e9;
+}
+
+void Window::mousePressEvent(QMouseEvent *event) {
+  //printf("mouse event\n");
+  if (event->button() == Qt::LeftButton) {
+    uint64_t t0 = events.begin().key();
+    uint64_t tt = pixelToTime(event->x());
+    //printf("seek to %lu\n", t0+tt);
+    unlogger->setSeekRequest(t0+tt);
+  }
+  this->update();
 }
 
 void Window::paintEvent(QPaintEvent *event) {
@@ -69,10 +97,10 @@ void Window::paintEvent(QPaintEvent *event) {
     //printf("%lld %d\n", e.getLogMonoTime()-t0, type);
     if (type == cereal::Event::CONTROLS_STATE) {
       auto controlsState = e.getControlsState();
-      float t = (e.getLogMonoTime()-t0)*1e-9;
+      uint64_t t = (e.getLogMonoTime()-t0);
       float vEgo = controlsState.getVEgo();
       int enabled = controlsState.getState() == cereal::ControlsState::OpenpilotState::ENABLED;
-      int rt = int(t*4.0+0.5); // 250 ms per pixel
+      int rt = timeToPixel(t); // 250 ms per pixel
       if (rt != lt) {
         int vv = vEgo*10.0;
         if (lt != -1) {
@@ -94,12 +122,17 @@ void Window::paintEvent(QPaintEvent *event) {
       //printf("%f : %f\n", t, vEgo);
     }
   }
-  int rrt = int((worker->getCurrentTime()-t0)*1e-9*4.0+0.5);
-  p.drawRect(rrt-1, 0, 2, 600);
+  uint64_t ct = unlogger->getCurrentTime();
+  if (ct != 0) {
+    int rrt = timeToPixel(ct-t0);
+    p.drawRect(rrt-1, 0, 2, 600);
+  }
 
   p.end();
 
-  qDebug() << "paint in" << timer.elapsed() << "ms";
+  if (timer.elapsed() > 50) {
+    qDebug() << "paint in" << timer.elapsed() << "ms";
+  }
 }
 
 int main(int argc, char *argv[]) {
@@ -113,8 +146,8 @@ int main(int argc, char *argv[]) {
   Window window;
 
   QVector<LogReader*> lrs;
-  //for (int i = 0; i <= 6; i++) {
   for (int i = 2; i <= 2; i++) {
+  //for (int i = 0; i <= 6; i++) {
     QString fn = QString("%1/%2/rlog.bz2").arg(route).arg(i);
     LogReader *lr = new LogReader(fn, &events);
     lrs.append(lr);

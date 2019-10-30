@@ -4,6 +4,7 @@
 
 FileReader::FileReader(const QString& file) {
   timer.start();
+  // TODO: Support reading files from the API
   startRequest(QUrl("http://data.comma.life/"+file));
 }
 
