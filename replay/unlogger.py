@@ -19,6 +19,7 @@ from datetime import datetime
 # could be its own pip package, which we'd need to build and release
 from cereal import log as capnp_log
 from selfdrive.services import service_list
+from selfdrive.messaging import pub_sock
 from common import realtime
 
 from tools.lib.file_helpers import mkdirs_exists_ok
@@ -150,8 +151,7 @@ class UnloggerWorker(object):
     return route
 
 def _get_address_send_func(address):
-  sock = zmq.Context.instance().socket(zmq.PUB)
-  sock.bind(address)
+  sock = pub_sock(address)
   return sock.send
 
 
@@ -215,7 +215,7 @@ def unlogger_thread(command_address, forward_commands_address, data_address, run
       reset_time = True
     elif data_socket in evts:
       msg_generation, typ, msg_time, route_time = data_socket.recv_pyobj(flags=zmq.RCVMORE)
-      msg_bytes = data_socket.recv(copy=False)
+      msg_bytes = data_socket.recv()
       if msg_generation < generation:
         # Skip packets.
         continue
@@ -271,7 +271,7 @@ def unlogger_thread(command_address, forward_commands_address, data_address, run
           reset_time = True
 
       # Send message.
-      send_funcs[typ](msg_bytes, copy=False)
+      send_funcs[typ](msg_bytes)
 
 def timestamp_to_s(tss):
   return time.mktime(datetime.strptime(tss, '%Y-%m-%d--%H-%M-%S').timetuple())
@@ -295,10 +295,7 @@ def _get_address_mapping(args):
   else:
     services_to_mock = service_list.keys()
 
-  address_mapping = {
-    service_name: "tcp://*:{}".format(service_list[service_name].port)
-    for service_name in services_to_mock
-  }
+  address_mapping = {service_name: service_name for service_name in services_to_mock}
   address_mapping.update(dict(args.address_mapping))
 
   for k in args.disabled:
