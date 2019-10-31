@@ -51,11 +51,9 @@ FrameReader::FrameReader(const char *fn) {
 
 AVFrame *FrameReader::toRGB(AVFrame *pFrame) {
   AVFrame *pFrameRGB = av_frame_alloc();
-  int numBytes = avpicture_get_size(PIX_FMT_RGB24, pFrame->width, pFrame->height);
-  //printf("%d\n", numBytes);
+  int numBytes = avpicture_get_size(PIX_FMT_BGR24, pFrame->width, pFrame->height);
   uint8_t *buffer = (uint8_t *)av_malloc(numBytes*sizeof(uint8_t));
-  avpicture_fill((AVPicture *)pFrameRGB, buffer, PIX_FMT_RGB24, pFrame->width, pFrame->height);
-
+  avpicture_fill((AVPicture *)pFrameRGB, buffer, PIX_FMT_BGR24, pFrame->width, pFrame->height);
 	sws_scale(sws_ctx, (uint8_t const * const *)pFrame->data,
 						pFrame->linesize, 0, pFrame->height,
 						pFrameRGB->data, pFrameRGB->linesize);
