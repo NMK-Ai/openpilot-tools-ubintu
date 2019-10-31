@@ -7,13 +7,14 @@ TARGET = nui
 INCLUDEPATH += .
 
 # Input
-SOURCES += main.cpp FileReader.cpp Unlogger.cpp
-HEADERS = FileReader.hpp Unlogger.hpp
+SOURCES += main.cpp FileReader.cpp Unlogger.cpp FrameReader.cpp
+HEADERS = FileReader.hpp Unlogger.hpp FrameReader.hpp
 
 CONFIG += c++14
 
 QT += widgets network core
 
 INCLUDEPATH += /home/batman/one/phonelibs/capnp-cpp/include /home/batman/one /home/batman/one/selfdrive/messaging /home/batman/one/phonelibs/yaml-cpp/include
+LIBS += -lavformat -lavcodec -lavutil -lswscale
 LIBS += -lbz2 -L/home/batman/one/phonelibs/capnp-cpp/x64/lib -l:libcapnp.a -l:libkj.a -L/home/batman/one/selfdrive/messaging -l:messaging.a -L/home/batman/one/phonelibs/yaml-cpp/x64/lib -l:libyaml-cpp.a
 

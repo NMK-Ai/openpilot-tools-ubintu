@@ -4,13 +4,15 @@
 #include <QThread>
 #include "messaging.hpp"
 #include "FileReader.hpp"
+#include "FrameReader.hpp"
 
 class Unlogger : public QObject {
 Q_OBJECT
   public:
-    Unlogger(Events *events_);
+    Unlogger(Events *events_, QMap<int, FrameReader*> *frs_);
     uint64_t getCurrentTime() { return tc; }
     void setSeekRequest(uint64_t seek_request_) { seek_request = seek_request_; }
+    QMap<int, QPair<int, int> > eidx;
   public slots:
     void process();
   signals:
@@ -18,6 +20,7 @@ Q_OBJECT
     void finished();
   private:
     Events *events;
+    QMap<int, FrameReader*> *frs;
     QMap<int, PubSocket*> socks;
     Context *ctx;
     uint64_t tc = 0;

@@ -1,4 +1,5 @@
 #include "FileReader.hpp"
+#include "FrameReader.hpp"
 
 #include <QtNetwork>
 
@@ -41,7 +42,8 @@ FileReader::~FileReader() {
 
 }
 
-LogReader::LogReader(const QString& file, Events *events_) : FileReader(file), events(events_) {
+LogReader::LogReader(const QString& file, Events *events_, QMap<int, QPair<int, int> > *eidx_) :
+    FileReader(file), events(events_), eidx(eidx_) {
   bStream.next_in = NULL;
   bStream.avail_in = 0;
   bStream.bzalloc = NULL;
@@ -102,6 +104,13 @@ void LogReader::readyRead() {
       cereal::Event::Reader event = tmsg->getRoot<cereal::Event>();
       events_local.insert(event.getLogMonoTime(), event);
 
+      // hack
+      // TODO: rewrite with callback
+      if (event.which() == cereal::Event::ENCODE_IDX) {
+        auto ee = event.getEncodeIdx();
+        eidx->insert(ee.getFrameId(), qMakePair(ee.getSegmentNum(), ee.getSegmentId()));
+      }
+
       // increment
       event_offset = (char*)cmsg.getEnd() - raw.data();
     } catch (const kj::Exception& e) {
@@ -135,12 +144,5 @@ void LogReader::done() {
       printf("%lld : %f\n", e.getLogMonoTime()-t0, vEgo);
     }
   }*/
-}
-
-FrameReader::FrameReader(const QString& file) : FileReader(file) {
-}
-
-void FrameReader::readyRead() {
-  QByteArray dat = reply->readAll();
 }
 

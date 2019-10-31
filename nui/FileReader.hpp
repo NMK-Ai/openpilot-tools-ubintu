@@ -34,7 +34,7 @@ typedef QMultiMap<uint64_t, cereal::Event::Reader> Events;
 
 class LogReader : public FileReader {
 public:
-  LogReader(const QString& file, Events *);
+  LogReader(const QString& file, Events *, QMap<int, QPair<int, int> > *eidx_);
   void readyRead();
   void done();
 
@@ -45,13 +45,7 @@ private:
   QByteArray raw;
   int event_offset;
   Events *events;
-};
-
-class FrameReader : public FileReader {
-public:
-  FrameReader(const QString& file);
-  void readyRead();
-private:
+  QMap<int, QPair<int, int> > *eidx;
 };
 
 #endif

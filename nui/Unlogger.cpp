@@ -10,7 +10,7 @@
 
 #include "Unlogger.hpp"
 
-Unlogger::Unlogger(Events *events_) : events(events_) {
+Unlogger::Unlogger(Events *events_, QMap<int, FrameReader*> *frs_) : events(events_), frs(frs_) {
   ctx = Context::create();
   YAML::Node service_list = YAML::LoadFile("../..//selfdrive/service_list.yaml");
 
@@ -97,6 +97,25 @@ void Unlogger::process() {
 
         capnp::MallocMessageBuilder msg;
         msg.setRoot(e);
+
+        if (e.which() == cereal::Event::FRAME) {
+          auto fr = msg.getRoot<cereal::Event>().getFrame();
+
+          // TODO: better way?
+          if (eidx.find(fr.getFrameId()) != eidx.end()) {
+            auto pp = eidx[fr.getFrameId()];
+            qDebug() << fr.getFrameId() << pp;
+
+            if (frs->find(pp.first) != frs->end()) {
+              auto frm = (*frs)[pp.first];
+              auto data = frm->get(pp.second);
+              if (data != NULL) {
+                fr.setImage(kj::arrayPtr(data, frm->getRGBSize()));
+              }
+            }
+          }
+        }
+
         auto words = capnp::messageToFlatArray(msg);
         auto bytes = words.asBytes();
 

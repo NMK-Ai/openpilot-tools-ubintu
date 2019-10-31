@@ -10,6 +10,7 @@
 
 #include "FileReader.hpp"
 #include "Unlogger.hpp"
+#include "FrameReader.hpp"
 
 /*class Scrollbar : public QWidget {
   public:
@@ -42,7 +43,7 @@ class Window : public QWidget {
     // TODO: This is not thread safe
     Events events;
     QVector<LogReader*> lrs;
-    QVector<FrameReader*> frs;
+    QMap<int, FrameReader*> frs;
 };
 
 Window::Window(QString route_) : route(route_) {
@@ -53,7 +54,7 @@ Window::Window(QString route_) : route(route_) {
   //sb->setGeometry(0, 0, 200, 100);
 
   QThread* thread = new QThread;
-  unlogger = new Unlogger(&events);
+  unlogger = new Unlogger(&events, &frs);
   unlogger->moveToThread(thread);
   connect(thread, SIGNAL (started()), unlogger, SLOT (process()));
   connect(unlogger, SIGNAL (elapsed()), this, SLOT (update()));
@@ -62,11 +63,10 @@ Window::Window(QString route_) : route(route_) {
   //for (int i = 0; i <= 6; i++) {
   for (int i = 2; i <= 2; i++) {
     QString fn = QString("%1/%2/rlog.bz2").arg(route).arg(i);
-    lrs.append(new LogReader(fn, &events));
-    /*QString frn = QString("%1/%2/fcamera.hevc").arg(route).arg(i);
-    frs.append(new FrameReader(frn));*/
+    lrs.append(new LogReader(fn, &events, &unlogger->eidx));
+    QString frn = QString("%1/%2/fcamera.hevc").arg(route).arg(i);
+    frs.insert(i, new FrameReader(qPrintable(frn)));
   }
-
 }
 
 int Window::timeToPixel(uint64_t ns) {
