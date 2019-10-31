@@ -6,6 +6,7 @@ FrameReader::FrameReader(const char *fn) {
   char url[0x400];
   snprintf(url, sizeof(url)-1, "http://data.comma.life/%s", fn);
 
+  avformat_network_init();
   av_register_all();
   if (avformat_open_input(&pFormatCtx, url, NULL, NULL) != 0) {
     fprintf(stderr, "error loading %s\n", url);
@@ -27,7 +28,26 @@ FrameReader::FrameReader(const char *fn) {
 													 width, height, PIX_FMT_BGR24,
 													 SWS_BILINEAR, NULL, NULL, NULL);
 
-  printf("started decode thread\n");
+  t = new std::thread([&](){
+    AVPacket *pkt = (AVPacket *)malloc(sizeof(AVPacket));
+    while (av_read_frame(pFormatCtx, pkt)>=0) {
+      //printf("%d pkt %d %d\n", pkts.size(), pkt->size, pkt->pos);
+      pkts.push_back(pkt);
+      pkt = (AVPacket *)malloc(sizeof(AVPacket));
+    }
+    free(pkt);
+    printf("framereader download done\n");
+  });
+
+
+  /*    int frameFinished;
+      AVFrame *pFrame=av_frame_alloc();
+      avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet);
+      if (!frameFinished) {
+        printf("NO FRAME\n");
+      }*/
+
+  /*printf("started decode thread\n");
   t = new std::thread([&](){
     printf("hello from decode thread\n");
     AVPacket packet;
@@ -46,7 +66,7 @@ FrameReader::FrameReader(const char *fn) {
         //if (i==10) break;
       }
     }
-  });
+  });*/
 }
 
 AVFrame *FrameReader::toRGB(AVFrame *pFrame) {
@@ -61,10 +81,26 @@ AVFrame *FrameReader::toRGB(AVFrame *pFrame) {
 }
 
 uint8_t *FrameReader::get(int idx) {
-  uint8_t *ret = NULL;
-  frames_mutex.lock();
-  if (idx < frames.size()) ret = frames[idx];
-  frames_mutex.unlock();
-  return ret;
+  waitForReady();
+  // TODO: one line?
+  auto it = cache.find(idx);
+  if (it != cache.end()) {
+    return it->second;
+  }
+
+  AVFrame *pFrame;
+  uint8_t *dat;
+  int gop = idx - idx%15;
+  //for (int i = idx - idx%15; i <= idx; i++) {
+  for (int i = gop; i <= gop+15; i++) {
+    if (i >= pkts.size()) break;
+    printf("decode %d\n", i);
+    int frameFinished;
+    pFrame = av_frame_alloc();
+    avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, pkts[i]);
+    dat = toRGB(pFrame)->data[0];
+    cache.insert(std::make_pair(i, dat));
+  }
+  return dat;
 }
 

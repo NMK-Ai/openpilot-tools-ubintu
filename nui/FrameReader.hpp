@@ -2,6 +2,7 @@
 #define FRAMEREADER_HPP
 
 #include <vector>
+#include <map>
 #include <thread>
 #include <mutex>
 
@@ -17,6 +18,10 @@ public:
   FrameReader(const char *fn);
   uint8_t *get(int idx);
   AVFrame *toRGB(AVFrame *);
+  void waitForReady() {
+    if (!joined) t->join();
+    joined = true;
+  }
   int getRGBSize() { return width*height*3; }
 private:
   AVFormatContext *pFormatCtx = NULL;
@@ -24,13 +29,15 @@ private:
 
 	struct SwsContext *sws_ctx = NULL;
 
-	int width=1164;
-	int height=874;
+	int width = 1164;
+	int height = 874;
 
-  std::vector<uint8_t *> frames;
-  std::mutex frames_mutex;
+  std::vector<AVPacket *> pkts;
 
   std::thread *t;
+  bool joined = false;
+
+  std::map<int, uint8_t *> cache;
 };
 
 #endif
