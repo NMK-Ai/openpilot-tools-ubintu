@@ -102,9 +102,10 @@ void Unlogger::process() {
           auto fr = msg.getRoot<cereal::Event>().getFrame();
 
           // TODO: better way?
-          if (eidx.find(fr.getFrameId()) != eidx.end()) {
-            auto pp = eidx[fr.getFrameId()];
-            qDebug() << fr.getFrameId() << pp;
+          auto it = eidx.find(fr.getFrameId());
+          if (it != eidx.end()) {
+            auto pp = *it;
+            //qDebug() << fr.getFrameId() << pp;
 
             if (frs->find(pp.first) != frs->end()) {
               auto frm = (*frs)[pp.first];

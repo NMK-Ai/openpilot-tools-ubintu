@@ -153,8 +153,11 @@ int main(int argc, char *argv[]) {
   QApplication app(argc, argv);
 
   QString route(argv[1]);
+  route = route.replace("|", "/");
   if (route == "") {
-    route = "3a5d6ac1c23e5536/2019-10-29--10-06-58";
+    printf("usage %s: <route>\n", argv[0]);
+    exit(0);
+    //route = "3a5d6ac1c23e5536/2019-10-29--10-06-58";
     //route = "0006c839f32a6f99/2019-02-18--06-21-29";
     //route = "02ec6bea180a4d36/2019-10-25--10-18-09";
   }

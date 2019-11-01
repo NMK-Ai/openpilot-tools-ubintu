@@ -15,6 +15,9 @@
 
 #include "cereal/gen/cpp/log.capnp.h"
 
+#include <thread>
+#include "channel.hpp"
+
 class FileReader : public QWidget {
 public:
   FileReader(const QString& file);
@@ -36,14 +39,19 @@ class LogReader : public FileReader {
 public:
   LogReader(const QString& file, Events *, QMap<int, QPair<int, int> > *eidx_);
   void readyRead();
-  void done();
 
 private:
   bz_stream bStream;
 
   // backing store
   QByteArray raw;
+
+  std::thread *parser;
   int event_offset;
+  channel<int> cdled;
+
+  // global
+  void mergeEvents(int dled);
   Events *events;
   QMap<int, QPair<int, int> > *eidx;
 };

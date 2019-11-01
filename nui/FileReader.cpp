@@ -62,34 +62,18 @@ LogReader::LogReader(const QString& file, Events *events_, QMap<int, QPair<int, 
 
   // parsed no events yet
   event_offset = 0;
+
+  parser = new std::thread([&]() {
+    while (1) {
+      mergeEvents(cdled.get());
+    }
+  }); 
 }
 
-void LogReader::readyRead() {
-  QByteArray dat = reply->readAll();
-
-  bStream.next_in = dat.data();
-  bStream.avail_in = dat.size();
-
-  while (bStream.avail_in > 0) {
-    int ret = BZ2_bzDecompress(&bStream);
-    if (ret != BZ_OK && ret != BZ_STREAM_END) qWarning() << "bz2 decompress failed";
-
-    qDebug() << "got" << dat.size() << "with" << bStream.avail_out << "size" << raw.size();
-
-    // support growth
-    // TODO: this will break underlying pointers, need to fix
-    /*size_t old_size = raw.size();
-    if (old_size/2 > bStream.avail_out) {
-      qDebug() << "resizing";
-      raw.resize(old_size*2);
-      bStream.next_out = raw.data() + old_size - bStream.avail_out;
-      bStream.avail_out += old_size;
-    }*/
-  }
-
-  int dled = raw.size() - bStream.avail_out;
+void LogReader::mergeEvents(int dled) {
   auto amsg = kj::arrayPtr((const capnp::word*)(raw.data() + event_offset), (dled-event_offset)/sizeof(capnp::word));
   Events events_local;
+  QMap<int, QPair<int, int> > eidx_local;
 
   while (amsg.size() > 0) {
     try {
@@ -108,7 +92,7 @@ void LogReader::readyRead() {
       // TODO: rewrite with callback
       if (event.which() == cereal::Event::ENCODE_IDX) {
         auto ee = event.getEncodeIdx();
-        eidx->insert(ee.getFrameId(), qMakePair(ee.getSegmentNum(), ee.getSegmentId()));
+        eidx_local.insert(ee.getFrameId(), qMakePair(ee.getSegmentNum(), ee.getSegmentId()));
       }
 
       // increment
@@ -123,26 +107,25 @@ void LogReader::readyRead() {
   // merge in events
   // TODO: add lock
   *events += events_local;
+  eidx->unite(eidx_local);
 
   printf("parsed %d into %d events with offset %d\n", dled, events->size(), event_offset);
 }
 
-void LogReader::done() {
-  //uint64_t t0 = events->begin().key();
-  //uint64_t t1 = (events->end()-1).key();
-  /*printf("paint event: %lu %lu e %lu\n", t0, t1, t1-t0);*/
+void LogReader::readyRead() {
+  QByteArray dat = reply->readAll();
 
-  /*uint64_t t = events->begin().value().getLogMonoTime();
-  printf("%lld\n", t);*/
+  bStream.next_in = dat.data();
+  bStream.avail_in = dat.size();
 
-  /*for (cereal::Event::Reader e : *events) {
-    auto type = e.which();
-    //printf("%lld %d\n", e.getLogMonoTime()-t0, type);
-    if (type == cereal::Event::CONTROLS_STATE) {
-      auto controlsState = e.getControlsState();
-      float vEgo = controlsState.getVEgo();
-      printf("%lld : %f\n", e.getLogMonoTime()-t0, vEgo);
-    }
-  }*/
+  while (bStream.avail_in > 0) {
+    int ret = BZ2_bzDecompress(&bStream);
+    if (ret != BZ_OK && ret != BZ_STREAM_END) qWarning() << "bz2 decompress failed";
+
+    qDebug() << "got" << dat.size() << "with" << bStream.avail_out << "size" << raw.size();
+  }
+
+  int dled = raw.size() - bStream.avail_out;
+  cdled.put(dled);
 }
 

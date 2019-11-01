@@ -63,7 +63,7 @@ void FrameReader::GOPCache(int idx) {
   mcache.unlock();
 
   if (!has_gop) {
-    printf("caching %d\n", gop);
+    //printf("caching %d\n", gop);
     for (int i = gop; i < gop+15; i++) {
       if (i >= pkts.size()) break;
       //printf("decode %d\n", i);
@@ -110,13 +110,16 @@ uint8_t *FrameReader::get(int idx) {
     // lookahead
     while (dat == NULL) {
       // wait for frame
-      printf("waiting for frame\n");
       usleep(50*1000);
       // check for frame
       mcache.lock();
       auto it = cache.find(idx);
       if (it != cache.end()) dat = it->second;
       mcache.unlock();
+      if (dat == NULL) {
+        printf(".");
+        fflush(stdout);
+      }
     }
   }
   return dat;
