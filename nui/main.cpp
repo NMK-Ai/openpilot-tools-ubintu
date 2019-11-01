@@ -60,8 +60,8 @@ Window::Window(QString route_) : route(route_) {
   connect(unlogger, SIGNAL (elapsed()), this, SLOT (update()));
   thread->start();
 
-  //for (int i = 0; i <= 6; i++) {
-  for (int i = 2; i <= 2; i++) {
+  //for (int i = 2; i <= 2; i++) {
+  for (int i = 0; i <= 6; i++) {
     QString fn = QString("%1/%2/rlog.bz2").arg(route).arg(i);
     lrs.append(new LogReader(fn, &events, &unlogger->eidx));
     QString frn = QString("%1/%2/fcamera.hevc").arg(route).arg(i);

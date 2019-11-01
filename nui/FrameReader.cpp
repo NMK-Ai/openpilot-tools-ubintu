@@ -1,5 +1,6 @@
 #include "FrameReader.hpp"
 #include <assert.h>
+#include <unistd.h>
 
 FrameReader::FrameReader(const char *fn) {
   int ret;
@@ -30,43 +31,51 @@ FrameReader::FrameReader(const char *fn) {
 
   t = new std::thread([&](){
     AVPacket *pkt = (AVPacket *)malloc(sizeof(AVPacket));
+    bool first = true;
     while (av_read_frame(pFormatCtx, pkt)>=0) {
       //printf("%d pkt %d %d\n", pkts.size(), pkt->size, pkt->pos);
+      if (first) {
+        AVFrame *pFrame = av_frame_alloc();
+        int frameFinished;
+        avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, pkt);
+        first = false;
+      }
       pkts.push_back(pkt);
       pkt = (AVPacket *)malloc(sizeof(AVPacket));
     }
     free(pkt);
     printf("framereader download done\n");
-  });
 
-
-  /*    int frameFinished;
-      AVFrame *pFrame=av_frame_alloc();
-      avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet);
-      if (!frameFinished) {
-        printf("NO FRAME\n");
-      }*/
-
-  /*printf("started decode thread\n");
-  t = new std::thread([&](){
-    printf("hello from decode thread\n");
-    AVPacket packet;
-    int i = 0;
-    while (av_read_frame(pFormatCtx, &packet)>=0) {
-      int frameFinished;
-      AVFrame *pFrame=av_frame_alloc();
-      avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet);
-      if (frameFinished) {
-        printf("got frame: %d\n", i);
-        frames_mutex.lock();
-        AVFrame *pFrameRGB = toRGB(pFrame);
-        frames.push_back((uint8_t*)pFrameRGB->data[0]);
-        frames_mutex.unlock();
-        i++;
-        //if (i==10) break;
+    t2 = new std::thread([&](){
+      while (1) {
+        GOPCache(to_cache.get());
       }
+    });
+  });
+}
+
+void FrameReader::GOPCache(int idx) {
+  AVFrame *pFrame;
+  int gop = idx - idx%15;
+
+  mcache.lock();
+  bool has_gop = cache.find(gop) != cache.end();
+  mcache.unlock();
+
+  if (!has_gop) {
+    printf("caching %d\n", gop);
+    for (int i = gop; i < gop+15; i++) {
+      if (i >= pkts.size()) break;
+      //printf("decode %d\n", i);
+      int frameFinished;
+      pFrame = av_frame_alloc();
+      avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, pkts[i]);
+      uint8_t *dat = toRGB(pFrame)->data[0];
+      mcache.lock();
+      cache.insert(std::make_pair(i, dat));
+      mcache.unlock();
     }
-  });*/
+  }
 }
 
 AVFrame *FrameReader::toRGB(AVFrame *pFrame) {
@@ -83,23 +92,32 @@ AVFrame *FrameReader::toRGB(AVFrame *pFrame) {
 uint8_t *FrameReader::get(int idx) {
   waitForReady();
   // TODO: one line?
+  uint8_t *dat = NULL;
+
+  // lookahead
+  to_cache.put(idx);
+  to_cache.put(idx+15);
+
+  mcache.lock();
   auto it = cache.find(idx);
   if (it != cache.end()) {
-    return it->second;
+    dat = it->second;
   }
+  mcache.unlock();
 
-  AVFrame *pFrame;
-  uint8_t *dat;
-  int gop = idx - idx%15;
-  //for (int i = idx - idx%15; i <= idx; i++) {
-  for (int i = gop; i <= gop+15; i++) {
-    if (i >= pkts.size()) break;
-    printf("decode %d\n", i);
-    int frameFinished;
-    pFrame = av_frame_alloc();
-    avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, pkts[i]);
-    dat = toRGB(pFrame)->data[0];
-    cache.insert(std::make_pair(i, dat));
+  if (dat == NULL) {
+    to_cache.put_front(idx);
+    // lookahead
+    while (dat == NULL) {
+      // wait for frame
+      printf("waiting for frame\n");
+      usleep(50*1000);
+      // check for frame
+      mcache.lock();
+      auto it = cache.find(idx);
+      if (it != cache.end()) dat = it->second;
+      mcache.unlock();
+    }
   }
   return dat;
 }
