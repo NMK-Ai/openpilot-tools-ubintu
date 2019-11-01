@@ -9,7 +9,7 @@
 class Unlogger : public QObject {
 Q_OBJECT
   public:
-    Unlogger(Events *events_, QMap<int, FrameReader*> *frs_);
+    Unlogger(Events *events_, QMap<int, FrameReader*> *frs_, int seek);
     uint64_t getCurrentTime() { return tc; }
     void setSeekRequest(uint64_t seek_request_) { seek_request = seek_request_; }
     QMap<int, QPair<int, int> > eidx;

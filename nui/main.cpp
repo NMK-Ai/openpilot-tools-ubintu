@@ -7,6 +7,7 @@
 #include <QPainter>
 #include <QThread>
 #include <QMouseEvent>
+#include <QLineEdit>
 
 #include "FileReader.hpp"
 #include "Unlogger.hpp"
@@ -14,7 +15,7 @@
 
 class Window : public QWidget {
   public:
-    Window(QString route_);
+    Window(QString route_, int seek);
     bool addSegment(int i);
   protected:
     void mousePressEvent(QMouseEvent *event) override;
@@ -35,18 +36,24 @@ class Window : public QWidget {
     // cache the bar
     QPixmap *px = NULL;
     int seg_add = 0;
+
+    QLineEdit *timeLE;
 };
 
-Window::Window(QString route_) : route(route_) {
+Window::Window(QString route_, int seek) : route(route_) {
+  timeLE = new QLineEdit(this);
+  timeLE->setPlaceholderText("Placeholder Text");
+  timeLE->move(50, 650);
+
   QThread* thread = new QThread;
-  unlogger = new Unlogger(&events, &frs);
+  unlogger = new Unlogger(&events, &frs, seek);
   unlogger->moveToThread(thread);
   connect(thread, SIGNAL (started()), unlogger, SLOT (process()));
   connect(unlogger, SIGNAL (elapsed()), this, SLOT (update()));
   thread->start();
 
   // add the first segment
-  addSegment(0);
+  addSegment(seek/60);
 }
 
 bool Window::addSegment(int i) {
@@ -67,7 +74,7 @@ bool Window::addSegment(int i) {
   return false;
 }
 
-#define PIXELS_PER_SEC 2.0
+#define PIXELS_PER_SEC 0.5
 
 int Window::timeToPixel(uint64_t ns) {
   // TODO: make this dynamic
@@ -96,6 +103,8 @@ void Window::mousePressEvent(QMouseEvent *event) {
 }
 
 void Window::paintEvent(QPaintEvent *event) {
+  if (events.size() == 0) return;
+
   QElapsedTimer timer;
   timer.start();
 
@@ -126,7 +135,7 @@ void Window::paintEvent(QPaintEvent *event) {
         int enabled = controlsState.getState() == cereal::ControlsState::OpenpilotState::ENABLED;
         int rt = timeToPixel(t); // 250 ms per pixel
         if (rt != lt) {
-          int vv = vEgo*10.0;
+          int vv = vEgo*8.0;
           if (lt != -1) {
             tt.setPen(Qt::red);
             tt.drawLine(lt, 300-lvv, rt, 300-vv);
@@ -146,7 +155,7 @@ void Window::paintEvent(QPaintEvent *event) {
     }
     tt.end();
     last_event_size = this_event_size;
-    if (lrs[seg_add]->is_done) {
+    if (lrs.find(seg_add) != lrs.end() && lrs[seg_add]->is_done) {
       while (!addSegment(++seg_add));
     }
   }
@@ -161,6 +170,8 @@ void Window::paintEvent(QPaintEvent *event) {
     addSegment((((ct-t0)*1e-9)/60)+1);
     int rrt = timeToPixel(ct-t0);
     p.drawRect(rrt-1, 0, 2, 600);
+
+    timeLE->setText(QString("%1").arg((ct-t0)*1e-9, '8', 'f', 2));
   }
 
   p.end();
@@ -174,6 +185,8 @@ int main(int argc, char *argv[]) {
   QApplication app(argc, argv);
 
   QString route(argv[1]);
+  int seek = QString(argv[2]).toInt();
+  printf("seek: %d\n", seek);
   route = route.replace("|", "/");
   if (route == "") {
     printf("usage %s: <route>\n", argv[0]);
@@ -183,8 +196,8 @@ int main(int argc, char *argv[]) {
     //route = "02ec6bea180a4d36/2019-10-25--10-18-09";
   }
 
-  Window window(route);
-  window.resize(1920, 600);
+  Window window(route, seek);
+  window.resize(1920, 800);
   window.setWindowTitle("nui unlogger");
   window.show();
 

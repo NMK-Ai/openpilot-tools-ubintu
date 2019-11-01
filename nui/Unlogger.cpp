@@ -10,9 +10,11 @@
 
 #include "Unlogger.hpp"
 
-Unlogger::Unlogger(Events *events_, QMap<int, FrameReader*> *frs_) : events(events_), frs(frs_) {
+Unlogger::Unlogger(Events *events_, QMap<int, FrameReader*> *frs_, int seek) : events(events_), frs(frs_) {
   ctx = Context::create();
   YAML::Node service_list = YAML::LoadFile("../../cereal/service_list.yaml");
+
+  seek_request = seek*1e9;
 
   for (const auto& it : service_list) {
     auto name = it.first.as<std::string>();
@@ -43,6 +45,9 @@ void Unlogger::process() {
     QThread::sleep(1);
   }
   qDebug() << "got events";
+
+  // TODO: hack
+  if (seek_request != 0) seek_request += events->begin().key();
 
   QElapsedTimer timer;
   timer.start();
