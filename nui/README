@@ -1,3 +1,7 @@
+== Ubuntu ==
+
+sudo apt-get install capnproto libyaml-cpp-dev
+
 == Mac ==
 
 brew install qt5 ffmpeg capnp yaml-cpp zmq

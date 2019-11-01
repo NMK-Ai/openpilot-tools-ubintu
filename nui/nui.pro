@@ -17,9 +17,17 @@ QT += widgets network core
 BASEDIR = "../../"
 PHONELIBS = $$BASEDIR"phonelibs"
 
+unix {
+  INCLUDEPATH = $$PHONELIBS/capnp-cpp/include $$PHONELIBS/yaml-cpp/include
+  LIBS += -L$$PHONELIBS/capnp-cpp/x64/lib -L$$PHONELIBS/yaml-cpp/x64/lib
+  LIBS += -l:libcapnp.a -l:libkj.a -l:libyaml-cpp.a
+} else {
+  LIBS += -lcapnp -lkj -lyaml-cpp
+}
+
 INCLUDEPATH += /usr/local/include
 INCLUDEPATH += $$PHONELIBS/capnp-cpp/include $$BASEDIR $$BASEDIR/selfdrive/messaging $$PHONELIBS/yaml-cpp/include
 LIBS += -L/usr/local/lib -lavformat -lavcodec -lavutil -lswscale
-LIBS += -L$$PHONELIBS/capnp-cpp/x64/lib -L$$PHONELIBS/yaml-cpp/x64/lib
-LIBS += -lzmq -lbz2 -lcapnp -lkj $$BASEDIR/selfdrive/messaging/messaging.a -lyaml-cpp
+LIBS += -lzmq -lbz2 $$BASEDIR/selfdrive/messaging/messaging.a
+
 
