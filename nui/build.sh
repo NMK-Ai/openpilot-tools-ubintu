@@ -1,4 +1,4 @@
 #!/bin/bash
 qmake
-make
+make -j
 

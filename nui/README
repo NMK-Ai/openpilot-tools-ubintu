@@ -1,0 +1,5 @@
+== Mac ==
+
+brew install qt5 ffmpeg capnp yaml-cpp zmq
+brew link qt5 --force
+

@@ -14,7 +14,12 @@ CONFIG += c++14
 
 QT += widgets network core
 
-INCLUDEPATH += /home/batman/one/phonelibs/capnp-cpp/include /home/batman/one /home/batman/one/selfdrive/messaging /home/batman/one/phonelibs/yaml-cpp/include
-LIBS += -lavformat -lavcodec -lavutil -lswscale
-LIBS += -lbz2 -L/home/batman/one/phonelibs/capnp-cpp/x64/lib -l:libcapnp.a -l:libkj.a -L/home/batman/one/selfdrive/messaging -l:messaging.a -L/home/batman/one/phonelibs/yaml-cpp/x64/lib -l:libyaml-cpp.a
+BASEDIR = "../../"
+PHONELIBS = $$BASEDIR"phonelibs"
+
+INCLUDEPATH += /usr/local/include
+INCLUDEPATH += $$PHONELIBS/capnp-cpp/include $$BASEDIR $$BASEDIR/selfdrive/messaging $$PHONELIBS/yaml-cpp/include
+LIBS += -L/usr/local/lib -lavformat -lavcodec -lavutil -lswscale
+LIBS += -L$$PHONELIBS/capnp-cpp/x64/lib -L$$PHONELIBS/yaml-cpp/x64/lib
+LIBS += -lzmq -lbz2 -lcapnp -lkj $$BASEDIR/selfdrive/messaging/messaging.a -lyaml-cpp
 

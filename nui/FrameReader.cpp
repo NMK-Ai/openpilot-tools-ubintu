@@ -26,8 +26,8 @@ FrameReader::FrameReader(const char *fn) {
   ret = avcodec_open2(pCodecCtx, pCodec, NULL);
   assert(ret >= 0);
 
-	sws_ctx = sws_getContext(width, height, PIX_FMT_YUV420P,
-													 width, height, PIX_FMT_BGR24,
+	sws_ctx = sws_getContext(width, height, AV_PIX_FMT_YUV420P,
+													 width, height, AV_PIX_FMT_BGR24,
 													 SWS_BILINEAR, NULL, NULL, NULL);
 
   t = new std::thread([&](){
@@ -81,9 +81,9 @@ void FrameReader::GOPCache(int idx) {
 
 AVFrame *FrameReader::toRGB(AVFrame *pFrame) {
   AVFrame *pFrameRGB = av_frame_alloc();
-  int numBytes = avpicture_get_size(PIX_FMT_BGR24, pFrame->width, pFrame->height);
+  int numBytes = avpicture_get_size(AV_PIX_FMT_BGR24, pFrame->width, pFrame->height);
   uint8_t *buffer = (uint8_t *)av_malloc(numBytes*sizeof(uint8_t));
-  avpicture_fill((AVPicture *)pFrameRGB, buffer, PIX_FMT_BGR24, pFrame->width, pFrame->height);
+  avpicture_fill((AVPicture *)pFrameRGB, buffer, AV_PIX_FMT_BGR24, pFrame->width, pFrame->height);
 	sws_scale(sws_ctx, (uint8_t const * const *)pFrame->data,
 						pFrame->linesize, 0, pFrame->height,
 						pFrameRGB->data, pFrameRGB->linesize);
