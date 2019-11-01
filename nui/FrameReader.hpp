@@ -49,6 +49,9 @@ private:
 
   void GOPCache(int idx);
   channel<int> to_cache;
+
+  bool valid = true;
+  char url[0x400];
 };
 
 #endif

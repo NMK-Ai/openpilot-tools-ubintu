@@ -4,33 +4,34 @@
 
 FrameReader::FrameReader(const char *fn) {
   int ret;
-  char url[0x400];
+
   snprintf(url, sizeof(url)-1, "http://data.comma.life/%s", fn);
 
-  avformat_network_init();
-  av_register_all();
-  if (avformat_open_input(&pFormatCtx, url, NULL, NULL) != 0) {
-    fprintf(stderr, "error loading %s\n", url);
-    return;
-  }
-  av_dump_format(pFormatCtx, 0, url, 0);
-
-  auto pCodecCtxOrig = pFormatCtx->streams[0]->codec;
-  auto pCodec = avcodec_find_decoder(pCodecCtxOrig->codec_id);
-  assert(pCodec != NULL);
-
-  pCodecCtx = avcodec_alloc_context3(pCodec);
-  ret = avcodec_copy_context(pCodecCtx, pCodecCtxOrig);
-  assert(ret == 0);
-
-  ret = avcodec_open2(pCodecCtx, pCodec, NULL);
-  assert(ret >= 0);
-
-	sws_ctx = sws_getContext(width, height, AV_PIX_FMT_YUV420P,
-													 width, height, AV_PIX_FMT_BGR24,
-													 SWS_BILINEAR, NULL, NULL, NULL);
-
   t = new std::thread([&](){
+    avformat_network_init();
+    av_register_all();
+    if (avformat_open_input(&pFormatCtx, url, NULL, NULL) != 0) {
+      fprintf(stderr, "error loading %s\n", url);
+      valid = false;
+      return;
+    }
+    av_dump_format(pFormatCtx, 0, url, 0);
+
+    auto pCodecCtxOrig = pFormatCtx->streams[0]->codec;
+    auto pCodec = avcodec_find_decoder(pCodecCtxOrig->codec_id);
+    assert(pCodec != NULL);
+
+    pCodecCtx = avcodec_alloc_context3(pCodec);
+    ret = avcodec_copy_context(pCodecCtx, pCodecCtxOrig);
+    assert(ret == 0);
+
+    ret = avcodec_open2(pCodecCtx, pCodec, NULL);
+    assert(ret >= 0);
+
+    sws_ctx = sws_getContext(width, height, AV_PIX_FMT_YUV420P,
+                             width, height, AV_PIX_FMT_BGR24,
+                             SWS_BILINEAR, NULL, NULL, NULL);
+
     AVPacket *pkt = (AVPacket *)malloc(sizeof(AVPacket));
     bool first = true;
     while (av_read_frame(pFormatCtx, pkt)>=0) {
@@ -91,6 +92,7 @@ AVFrame *FrameReader::toRGB(AVFrame *pFrame) {
 }
 
 uint8_t *FrameReader::get(int idx) {
+  if (!valid) return false;
   waitForReady();
   // TODO: one line?
   uint8_t *dat = NULL;
