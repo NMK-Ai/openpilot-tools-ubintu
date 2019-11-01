@@ -47,7 +47,13 @@ void Unlogger::process() {
   qDebug() << "got events";
 
   // TODO: hack
-  if (seek_request != 0) seek_request += events->begin().key();
+  if (seek_request != 0) {
+    seek_request += events->begin().key();
+    while (events->lowerBound(seek_request) == events->end()) {
+      qDebug() << "waiting for desired time";
+      QThread::sleep(1);
+    }
+  }
 
   QElapsedTimer timer;
   timer.start();
