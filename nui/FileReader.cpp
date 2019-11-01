@@ -3,14 +3,18 @@
 
 #include <QtNetwork>
 
-FileReader::FileReader(const QString& file) {
+FileReader::FileReader(const QString& file_) : file(file_) {
+}
+
+void FileReader::process() {
   timer.start();
   // TODO: Support reading files from the API
   startRequest(QUrl("http://data.comma.life/"+file));
 }
 
 void FileReader::startRequest(const QUrl &url) {
-  reply = qnam.get(QNetworkRequest(url));
+  qnam = new QNetworkAccessManager;
+  reply = qnam->get(QNetworkRequest(url));
   connect(reply, &QNetworkReply::finished, this, &FileReader::httpFinished);
   connect(reply, &QIODevice::readyRead, this, &FileReader::readyRead);
   qDebug() << "requesting" << url;

@@ -52,8 +52,14 @@ Window::Window(QString route_) : route(route_) {
 bool Window::addSegment(int i) {
   if (frs.find(i) == frs.end()) {
     QString fn = QString("%1/%2/rlog.bz2").arg(route).arg(i);
+
+    QThread* thread = new QThread;
     lrs.insert(i, new LogReader(fn, &events, &unlogger->eidx));
-    connect(lrs[i], SIGNAL (finished()), this, SLOT (update()));
+    lrs[i]->moveToThread(thread);
+    connect(thread, SIGNAL (started()), lrs[i], SLOT (process()));
+    thread->start();
+
+    //connect(lrs[i], SIGNAL (finished()), this, SLOT (update()));
     QString frn = QString("%1/%2/fcamera.hevc").arg(route).arg(i);
     frs.insert(i, new FrameReader(qPrintable(frn)));
     return true;
@@ -61,7 +67,7 @@ bool Window::addSegment(int i) {
   return false;
 }
 
-#define PIXELS_PER_SEC 1.0
+#define PIXELS_PER_SEC 2.0
 
 int Window::timeToPixel(uint64_t ns) {
   // TODO: make this dynamic
@@ -140,7 +146,9 @@ void Window::paintEvent(QPaintEvent *event) {
     }
     tt.end();
     last_event_size = this_event_size;
-    while (!addSegment(++seg_add));
+    if (lrs[seg_add]->is_done) {
+      while (!addSegment(++seg_add));
+    }
   }
 
   QPainter p(this);

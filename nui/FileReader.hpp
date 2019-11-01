@@ -18,20 +18,23 @@
 #include <thread>
 #include "channel.hpp"
 
-class FileReader : public QWidget {
+class FileReader : public QObject {
 Q_OBJECT
 public:
-  FileReader(const QString& file);
+  FileReader(const QString& file_);
   void startRequest(const QUrl &url);
   ~FileReader();
   virtual void readyRead();
   void httpFinished();
   virtual void done() {};
+public slots:
+  void process();
 protected:
   QNetworkReply *reply;
 private:
-  QNetworkAccessManager qnam;
+  QNetworkAccessManager *qnam;
   QElapsedTimer timer;
+  QString file;
 };
 
 typedef QMultiMap<uint64_t, cereal::Event::Reader> Events;
@@ -41,6 +44,8 @@ Q_OBJECT
 public:
   LogReader(const QString& file, Events *, QMap<int, QPair<int, int> > *eidx_);
   void readyRead();
+  void done() { is_done = true; };
+  bool is_done = false;
 private:
   bz_stream bStream;
 
