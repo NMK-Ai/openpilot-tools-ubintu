@@ -69,7 +69,7 @@ void Unlogger::process() {
         }
       }
 
-      if (abs(tc-last_elapsed) > 100e6) {
+      if (abs(tc-last_elapsed) > 50e6) {
         //qDebug() << "elapsed";
         emit elapsed();
         last_elapsed = tc;

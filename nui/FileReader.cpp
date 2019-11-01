@@ -29,7 +29,6 @@ void FileReader::httpFinished() {
   } else {
     qDebug() << "done in" << timer.elapsed() << "ms";
     done();
-
   }
 }
 
@@ -120,8 +119,10 @@ void LogReader::readyRead() {
 
   while (bStream.avail_in > 0) {
     int ret = BZ2_bzDecompress(&bStream);
-    if (ret != BZ_OK && ret != BZ_STREAM_END) qWarning() << "bz2 decompress failed";
-
+    if (ret != BZ_OK && ret != BZ_STREAM_END) {
+      qWarning() << "bz2 decompress failed";
+      break;
+    }
     qDebug() << "got" << dat.size() << "with" << bStream.avail_out << "size" << raw.size();
   }
 

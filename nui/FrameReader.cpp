@@ -11,6 +11,7 @@ FrameReader::FrameReader(const char *fn) {
   av_register_all();
   if (avformat_open_input(&pFormatCtx, url, NULL, NULL) != 0) {
     fprintf(stderr, "error loading %s\n", url);
+    return;
   }
   av_dump_format(pFormatCtx, 0, url, 0);
 

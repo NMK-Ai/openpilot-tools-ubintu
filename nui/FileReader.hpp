@@ -19,6 +19,7 @@
 #include "channel.hpp"
 
 class FileReader : public QWidget {
+Q_OBJECT
 public:
   FileReader(const QString& file);
   void startRequest(const QUrl &url);
@@ -36,10 +37,10 @@ private:
 typedef QMultiMap<uint64_t, cereal::Event::Reader> Events;
 
 class LogReader : public FileReader {
+Q_OBJECT
 public:
   LogReader(const QString& file, Events *, QMap<int, QPair<int, int> > *eidx_);
   void readyRead();
-
 private:
   bz_stream bStream;
 
