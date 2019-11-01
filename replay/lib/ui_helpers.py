@@ -7,8 +7,8 @@ import numpy as np
 import pygame
 
 from tools.lib.lazy_property import lazy_property
-from selfdrive.config import RADAR_TO_CENTER
 from selfdrive.config import UIParams as UP
+from selfdrive.config import RADAR_TO_CAMERA
 from selfdrive.controls.lib.lane_planner import (compute_path_pinv,
                                                  model_polyfit)
 
@@ -257,8 +257,9 @@ def plot_model(m, VM, v_ego, curvature, imgw, calibration, top_down, d_poly, top
     if lead.prob < 0.5:
       continue
 
-    _, py_top = to_lid_pt(lead.dist + lead.std, lead.relY)
-    px, py_bottom = to_lid_pt(lead.dist - lead.std, lead.relY)
+    lead_dist_from_radar = lead.dist - RADAR_TO_CAMERA
+    _, py_top = to_lid_pt(lead_dist_from_radar + lead.std, lead.relY)
+    px, py_bottom = to_lid_pt(lead_dist_from_radar - lead.std, lead.relY)
     top_down[1][int(round(px - 4)):int(round(px + 4)), py_top:py_bottom] = top_down_color
 
   color = (0, int(255 * m.lpath.prob), 0)
@@ -280,7 +281,7 @@ def maybe_update_radar_points(lt, lid_overlay):
   if lt is not None:
     ar_pts = {}
     for track in lt:
-      ar_pts[track.trackId] = [track.dRel + RADAR_TO_CENTER, track.yRel, track.vRel, track.aRel, track.oncoming, track.stationary]
+      ar_pts[track.trackId] = [track.dRel, track.yRel, track.vRel, track.aRel, track.oncoming, track.stationary]
   for ids, pt in ar_pts.items():
     px, py = to_lid_pt(pt[0], pt[1])
     if px != -1:
