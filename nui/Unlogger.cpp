@@ -12,7 +12,7 @@
 
 Unlogger::Unlogger(Events *events_, QMap<int, FrameReader*> *frs_) : events(events_), frs(frs_) {
   ctx = Context::create();
-  YAML::Node service_list = YAML::LoadFile("../..//selfdrive/service_list.yaml");
+  YAML::Node service_list = YAML::LoadFile("../../cereal/service_list.yaml");
 
   for (const auto& it : service_list) {
     auto name = it.first.as<std::string>();

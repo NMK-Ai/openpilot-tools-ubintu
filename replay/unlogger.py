@@ -19,7 +19,7 @@ from datetime import datetime
 # could be its own pip package, which we'd need to build and release
 from cereal import log as capnp_log
 from selfdrive.services import service_list
-from selfdrive.messaging import pub_sock
+from cereal.messaging import pub_sock
 from common import realtime
 
 from tools.lib.file_helpers import mkdirs_exists_ok

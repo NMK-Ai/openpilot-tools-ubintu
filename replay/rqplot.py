@@ -3,7 +3,7 @@ import os
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
-import selfdrive.messaging as messaging
+import cereal.messaging as messaging
 from selfdrive.services import service_list
 import time
 import zmq

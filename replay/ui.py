@@ -16,7 +16,7 @@ from common.transformations.model import (MODEL_CX, MODEL_CY, MODEL_INPUT_SIZE,
 from selfdrive.car.toyota.interface import CarInterface as ToyotaInterface
 from selfdrive.config import UIParams as UP
 from selfdrive.controls.lib.vehicle_model import VehicleModel
-import selfdrive.messaging as messaging
+import cereal.messaging as messaging
 from tools.replay.lib.ui_helpers import (_BB_TO_FULL_FRAME, BLACK, BLUE, GREEN,
                                          YELLOW, RED,
                                          CalibrationTransformsForWarpMatrix,

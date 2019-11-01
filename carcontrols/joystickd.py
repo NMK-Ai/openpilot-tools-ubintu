@@ -8,7 +8,7 @@
 
 import pygame
 import zmq
-import selfdrive.messaging as messaging
+import cereal.messaging as messaging
 
 
 def joystick_thread():
