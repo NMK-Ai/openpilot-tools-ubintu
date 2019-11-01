@@ -4,7 +4,7 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 import cereal.messaging as messaging
-from selfdrive.services import service_list
+from cereal.services import service_list
 import time
 import zmq
 

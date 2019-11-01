@@ -18,7 +18,7 @@ from datetime import datetime
 # strat 2: build pip packages around these
 # could be its own pip package, which we'd need to build and release
 from cereal import log as capnp_log
-from selfdrive.services import service_list
+from cereal.services import service_list
 from cereal.messaging import pub_sock
 from common import realtime
 

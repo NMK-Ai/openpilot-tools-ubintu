@@ -15,7 +15,7 @@ from collections import deque
 import av
 
 import cereal.messaging as messaging
-from selfdrive.services import service_list
+from cereal.services import service_list
 
 PYGAME = os.getenv("PYGAME") is not None
 if PYGAME:
