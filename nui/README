@@ -1,6 +1,6 @@
 == Ubuntu ==
 
-sudo apt-get install capnproto libyaml-cpp-dev
+sudo apt-get install capnproto libyaml-cpp-dev qt5-default
 
 == Mac ==
 
