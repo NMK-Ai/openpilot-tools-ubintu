@@ -4,15 +4,13 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 import cereal.messaging as messaging
-from cereal.services import service_list
 import time
-import zmq
 
 
 # tool to plot one or more signals live. Call ex:
 #./rqplot.py log.carState.vEgo log.carState.aEgo
 
-# TODO: can this tool be made a lot less cpu consuming?
+# TODO: can this tool consume 10x less cpu?
 
 def recursive_getattr(x, name):
    l = name.split('.')
@@ -23,7 +21,7 @@ def recursive_getattr(x, name):
 
 
 if __name__ == "__main__":
-  poller = zmq.Poller()
+  poller = messaging.Poller()
 
   services = []
   fields = []
@@ -46,7 +44,7 @@ if __name__ == "__main__":
     sub_split = sub.split(".")
     services.append(sub_split[0])
     fields.append(".".join(sub_split[1:]))
-    subs.append(messaging.sub_sock(service_list[sub_split[0]].port, poller))
+    subs.append(messaging.sub_sock(sub_split[0], poller))
 
     x.append(np.ones(LEN)*np.nan)
     y.append(np.ones(LEN)*np.nan)
