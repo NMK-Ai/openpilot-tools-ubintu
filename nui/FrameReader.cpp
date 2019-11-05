@@ -2,14 +2,54 @@
 #include <assert.h>
 #include <unistd.h>
 
+static int ffmpeg_lockmgr_cb(void **arg, enum AVLockOp op)
+{
+    pthread_mutex_t *mutex = (pthread_mutex_t *)*arg;
+    int err;
+
+    switch (op) {
+    case AV_LOCK_CREATE:
+        mutex = (pthread_mutex_t *)malloc(sizeof(*mutex));
+        if (!mutex)
+            return AVERROR(ENOMEM);
+        if ((err = pthread_mutex_init(mutex, NULL))) {
+            free(mutex);
+            return AVERROR(err);
+        }
+        *arg = mutex;
+        return 0;
+    case AV_LOCK_OBTAIN:
+        if ((err = pthread_mutex_lock(mutex)))
+            return AVERROR(err);
+
+        return 0;
+    case AV_LOCK_RELEASE:
+        if ((err = pthread_mutex_unlock(mutex)))
+            return AVERROR(err);
+
+        return 0;
+    case AV_LOCK_DESTROY:
+        if (mutex)
+            pthread_mutex_destroy(mutex);
+        free(mutex);
+        *arg = NULL;
+        return 0;
+    }
+    return 1;
+}
+
 FrameReader::FrameReader(const char *fn) {
   int ret;
+
+  ret = av_lockmgr_register(ffmpeg_lockmgr_cb);
+  assert(ret >= 0);
+
+  avformat_network_init();
+  av_register_all();
 
   snprintf(url, sizeof(url)-1, "http://data.comma.life/%s", fn);
 
   t = new std::thread([&](){
-    avformat_network_init();
-    av_register_all();
     if (avformat_open_input(&pFormatCtx, url, NULL, NULL) != 0) {
       fprintf(stderr, "error loading %s\n", url);
       valid = false;
@@ -31,8 +71,10 @@ FrameReader::FrameReader(const char *fn) {
     sws_ctx = sws_getContext(width, height, AV_PIX_FMT_YUV420P,
                              width, height, AV_PIX_FMT_BGR24,
                              SWS_BILINEAR, NULL, NULL, NULL);
+    assert(sws_ctx != NULL);
 
     AVPacket *pkt = (AVPacket *)malloc(sizeof(AVPacket));
+    assert(pkt != NULL);
     bool first = true;
     while (av_read_frame(pFormatCtx, pkt)>=0) {
       //printf("%d pkt %d %d\n", pkts.size(), pkt->size, pkt->pos);
@@ -44,6 +86,7 @@ FrameReader::FrameReader(const char *fn) {
       }
       pkts.push_back(pkt);
       pkt = (AVPacket *)malloc(sizeof(AVPacket));
+      assert(pkt != NULL);
     }
     free(pkt);
     printf("framereader download done\n");
