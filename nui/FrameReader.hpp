@@ -1,6 +1,7 @@
 #ifndef FRAMEREADER_HPP
 #define FRAMEREADER_HPP
 
+#include <unistd.h>
 #include <vector>
 #include <map>
 #include <thread>
@@ -24,10 +25,11 @@ public:
   uint8_t *get(int idx);
   AVFrame *toRGB(AVFrame *);
   void waitForReady() {
-    if (!joined) t->join();
-    joined = true;
+    while (!joined) usleep(10*1000);
   }
   int getRGBSize() { return width*height*3; }
+  void loaderThread();
+  void cacherThread();
 private:
   AVFormatContext *pFormatCtx = NULL;
   AVCodecContext *pCodecCtx = NULL;
@@ -41,8 +43,6 @@ private:
 
   std::thread *t;
   bool joined = false;
-
-  std::thread *t2;
 
   std::map<int, uint8_t *> cache;
   std::mutex mcache;

@@ -2,40 +2,39 @@
 #include <assert.h>
 #include <unistd.h>
 
-static int ffmpeg_lockmgr_cb(void **arg, enum AVLockOp op)
-{
-    pthread_mutex_t *mutex = (pthread_mutex_t *)*arg;
-    int err;
+static int ffmpeg_lockmgr_cb(void **arg, enum AVLockOp op) {
+  pthread_mutex_t *mutex = (pthread_mutex_t *)*arg;
+  int err;
 
-    switch (op) {
-    case AV_LOCK_CREATE:
-        mutex = (pthread_mutex_t *)malloc(sizeof(*mutex));
-        if (!mutex)
-            return AVERROR(ENOMEM);
-        if ((err = pthread_mutex_init(mutex, NULL))) {
-            free(mutex);
-            return AVERROR(err);
-        }
-        *arg = mutex;
-        return 0;
-    case AV_LOCK_OBTAIN:
-        if ((err = pthread_mutex_lock(mutex)))
-            return AVERROR(err);
-
-        return 0;
-    case AV_LOCK_RELEASE:
-        if ((err = pthread_mutex_unlock(mutex)))
-            return AVERROR(err);
-
-        return 0;
-    case AV_LOCK_DESTROY:
-        if (mutex)
-            pthread_mutex_destroy(mutex);
+  switch (op) {
+  case AV_LOCK_CREATE:
+    mutex = (pthread_mutex_t *)malloc(sizeof(*mutex));
+    if (!mutex)
+        return AVERROR(ENOMEM);
+    if ((err = pthread_mutex_init(mutex, NULL))) {
         free(mutex);
-        *arg = NULL;
-        return 0;
+        return AVERROR(err);
     }
-    return 1;
+    *arg = mutex;
+    return 0;
+  case AV_LOCK_OBTAIN:
+    if ((err = pthread_mutex_lock(mutex)))
+        return AVERROR(err);
+
+    return 0;
+  case AV_LOCK_RELEASE:
+    if ((err = pthread_mutex_unlock(mutex)))
+        return AVERROR(err);
+
+    return 0;
+  case AV_LOCK_DESTROY:
+    if (mutex)
+        pthread_mutex_destroy(mutex);
+    free(mutex);
+    *arg = NULL;
+    return 0;
+  }
+  return 1;
 }
 
 FrameReader::FrameReader(const char *fn) {
@@ -48,56 +47,60 @@ FrameReader::FrameReader(const char *fn) {
   av_register_all();
 
   snprintf(url, sizeof(url)-1, "http://data.comma.life/%s", fn);
-
-  t = new std::thread([&](){
-    if (avformat_open_input(&pFormatCtx, url, NULL, NULL) != 0) {
-      fprintf(stderr, "error loading %s\n", url);
-      valid = false;
-      return;
-    }
-    av_dump_format(pFormatCtx, 0, url, 0);
-
-    auto pCodecCtxOrig = pFormatCtx->streams[0]->codec;
-    auto pCodec = avcodec_find_decoder(pCodecCtxOrig->codec_id);
-    assert(pCodec != NULL);
-
-    pCodecCtx = avcodec_alloc_context3(pCodec);
-    ret = avcodec_copy_context(pCodecCtx, pCodecCtxOrig);
-    assert(ret == 0);
-
-    ret = avcodec_open2(pCodecCtx, pCodec, NULL);
-    assert(ret >= 0);
-
-    sws_ctx = sws_getContext(width, height, AV_PIX_FMT_YUV420P,
-                             width, height, AV_PIX_FMT_BGR24,
-                             SWS_BILINEAR, NULL, NULL, NULL);
-    assert(sws_ctx != NULL);
-
-    AVPacket *pkt = (AVPacket *)malloc(sizeof(AVPacket));
-    assert(pkt != NULL);
-    bool first = true;
-    while (av_read_frame(pFormatCtx, pkt)>=0) {
-      //printf("%d pkt %d %d\n", pkts.size(), pkt->size, pkt->pos);
-      if (first) {
-        AVFrame *pFrame = av_frame_alloc();
-        int frameFinished;
-        avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, pkt);
-        first = false;
-      }
-      pkts.push_back(pkt);
-      pkt = (AVPacket *)malloc(sizeof(AVPacket));
-      assert(pkt != NULL);
-    }
-    free(pkt);
-    printf("framereader download done\n");
-
-    t2 = new std::thread([&](){
-      while (1) {
-        GOPCache(to_cache.get());
-      }
-    });
-  });
+  t = new std::thread([&]() { this->loaderThread(); });
 }
+
+void FrameReader::loaderThread() {
+  int ret;
+
+  if (avformat_open_input(&pFormatCtx, url, NULL, NULL) != 0) {
+    fprintf(stderr, "error loading %s\n", url);
+    valid = false;
+    return;
+  }
+  av_dump_format(pFormatCtx, 0, url, 0);
+
+  auto pCodecCtxOrig = pFormatCtx->streams[0]->codec;
+  auto pCodec = avcodec_find_decoder(pCodecCtxOrig->codec_id);
+  assert(pCodec != NULL);
+
+  pCodecCtx = avcodec_alloc_context3(pCodec);
+  ret = avcodec_copy_context(pCodecCtx, pCodecCtxOrig);
+  assert(ret == 0);
+
+  ret = avcodec_open2(pCodecCtx, pCodec, NULL);
+  assert(ret >= 0);
+
+  sws_ctx = sws_getContext(width, height, AV_PIX_FMT_YUV420P,
+                           width, height, AV_PIX_FMT_BGR24,
+                           SWS_BILINEAR, NULL, NULL, NULL);
+  assert(sws_ctx != NULL);
+
+  AVPacket *pkt = (AVPacket *)malloc(sizeof(AVPacket));
+  assert(pkt != NULL);
+  bool first = true;
+  while (av_read_frame(pFormatCtx, pkt)>=0) {
+    //printf("%d pkt %d %d\n", pkts.size(), pkt->size, pkt->pos);
+    if (first) {
+      AVFrame *pFrame = av_frame_alloc();
+      int frameFinished;
+      avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, pkt);
+      first = false;
+    }
+    pkts.push_back(pkt);
+    pkt = (AVPacket *)malloc(sizeof(AVPacket));
+    assert(pkt != NULL);
+  }
+  free(pkt);
+  printf("framereader download done\n");
+  joined = true;
+
+  // cache
+  while (1) {
+    GOPCache(to_cache.get());
+  }
+}
+
 
 void FrameReader::GOPCache(int idx) {
   AVFrame *pFrame;

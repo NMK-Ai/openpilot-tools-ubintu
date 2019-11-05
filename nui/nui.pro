@@ -11,7 +11,7 @@ SOURCES += main.cpp FileReader.cpp Unlogger.cpp FrameReader.cpp
 HEADERS = FileReader.hpp Unlogger.hpp FrameReader.hpp
 
 CONFIG += c++14
-CONFIG += debug
+#CONFIG += debug
 
 QT += widgets network core
 

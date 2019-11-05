@@ -62,7 +62,7 @@ Window::Window(QString route_, int seek) : route(route_) {
 }
 
 bool Window::addSegment(int i) {
-  if (frs.find(i) == frs.end()) {
+  if (lrs.find(i) == lrs.end()) {
     QString fn = QString("%1/%2/rlog.bz2").arg(route).arg(i);
 
     QThread* thread = new QThread;
@@ -70,8 +70,8 @@ bool Window::addSegment(int i) {
     lrs[i]->moveToThread(thread);
     connect(thread, SIGNAL (started()), lrs[i], SLOT (process()));
     thread->start();
-
     //connect(lrs[i], SIGNAL (finished()), this, SLOT (update()));
+
     QString frn = QString("%1/%2/fcamera.hevc").arg(route).arg(i);
     frs.insert(i, new FrameReader(qPrintable(frn)));
     return true;
