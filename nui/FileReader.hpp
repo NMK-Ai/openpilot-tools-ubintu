@@ -7,6 +7,7 @@
 #include <QVector>
 #include <QMultiMap>
 #include <QElapsedTimer>
+#include <QReadWriteLock>
 
 #include <bzlib.h>
 
@@ -42,7 +43,7 @@ typedef QMultiMap<uint64_t, cereal::Event::Reader> Events;
 class LogReader : public FileReader {
 Q_OBJECT
 public:
-  LogReader(const QString& file, Events *, QMap<int, QPair<int, int> > *eidx_);
+  LogReader(const QString& file, Events *, QReadWriteLock* events_lock_, QMap<int, QPair<int, int> > *eidx_);
   void readyRead();
   void done() { is_done = true; };
   bool is_done = false;
@@ -59,6 +60,7 @@ private:
   // global
   void mergeEvents(int dled);
   Events *events;
+  QReadWriteLock* events_lock;
   QMap<int, QPair<int, int> > *eidx;
 };
 

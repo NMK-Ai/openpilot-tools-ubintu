@@ -45,8 +45,8 @@ FileReader::~FileReader() {
 
 }
 
-LogReader::LogReader(const QString& file, Events *events_, QMap<int, QPair<int, int> > *eidx_) :
-    FileReader(file), events(events_), eidx(eidx_) {
+LogReader::LogReader(const QString& file, Events *events_, QReadWriteLock* events_lock_, QMap<int, QPair<int, int> > *eidx_) :
+    FileReader(file), events(events_), events_lock(events_lock_), eidx(eidx_) {
   bStream.next_in = NULL;
   bStream.avail_in = 0;
   bStream.bzalloc = NULL;
@@ -109,8 +109,10 @@ void LogReader::mergeEvents(int dled) {
 
   // merge in events
   // TODO: add lock
+  events_lock->lockForWrite();
   *events += events_local;
   eidx->unite(eidx_local);
+  events_lock->unlock();
 
   printf("parsed %d into %d events with offset %d\n", dled, events->size(), event_offset);
 }

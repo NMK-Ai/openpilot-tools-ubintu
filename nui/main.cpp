@@ -7,6 +7,7 @@
 #include <QPainter>
 #include <QThread>
 #include <QMouseEvent>
+#include <QReadWriteLock>
 #include <QLineEdit>
 
 #include "FileReader.hpp"
@@ -27,9 +28,10 @@ class Window : public QWidget {
     uint64_t pixelToTime(int px);
     QString route;
 
-    // TODO: This is not thread safe
+    QReadWriteLock events_lock;
     Events events;
     int last_event_size = 0;
+
     QMap<int, LogReader*> lrs;
     QMap<int, FrameReader*> frs;
 
@@ -46,7 +48,7 @@ Window::Window(QString route_, int seek) : route(route_) {
   timeLE->move(50, 650);
 
   QThread* thread = new QThread;
-  unlogger = new Unlogger(&events, &frs, seek);
+  unlogger = new Unlogger(&events, &events_lock, &frs, seek);
   unlogger->moveToThread(thread);
   connect(thread, SIGNAL (started()), unlogger, SLOT (process()));
   connect(unlogger, SIGNAL (elapsed()), this, SLOT (update()));
@@ -61,7 +63,7 @@ bool Window::addSegment(int i) {
     QString fn = QString("%1/%2/rlog.bz2").arg(route).arg(i);
 
     QThread* thread = new QThread;
-    lrs.insert(i, new LogReader(fn, &events, &unlogger->eidx));
+    lrs.insert(i, new LogReader(fn, &events, &events_lock, &unlogger->eidx));
     lrs[i]->moveToThread(thread);
     connect(thread, SIGNAL (started()), lrs[i], SLOT (process()));
     thread->start();
