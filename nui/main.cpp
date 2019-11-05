@@ -19,6 +19,7 @@ class Window : public QWidget {
     Window(QString route_, int seek);
     bool addSegment(int i);
   protected:
+    void keyPressEvent(QKeyEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
     uint64_t ct;
@@ -54,6 +55,8 @@ Window::Window(QString route_, int seek) : route(route_) {
   connect(unlogger, SIGNAL (elapsed()), this, SLOT (update()));
   thread->start();
 
+  this->setFocusPolicy(Qt::StrongFocus);
+
   // add the first segment
   addSegment(seek/60);
 }
@@ -87,6 +90,11 @@ uint64_t Window::pixelToTime(int px) {
   // TODO: make this dynamic
   //printf("%d\n", px);
   return ((px+0.5)/PIXELS_PER_SEC) * 1e9;
+}
+
+void Window::keyPressEvent(QKeyEvent *event) {
+  printf("keypress: %x\n", event->key());
+  if (event->key() == Qt::Key_Space) unlogger->togglePause();
 }
 
 void Window::mousePressEvent(QMouseEvent *event) {

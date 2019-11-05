@@ -69,6 +69,12 @@ void Unlogger::process() {
 
     auto eit = events->lowerBound(t0);
     while (eit != events->end()) {
+      while (paused) {
+        QThread::usleep(1000);
+        t0 = eit->getLogMonoTime();
+        t0r = timer.nsecsElapsed();
+      }
+
       if (seek_request != 0) {
         t0 = seek_request;
         qDebug() << "seeking to" << t0;

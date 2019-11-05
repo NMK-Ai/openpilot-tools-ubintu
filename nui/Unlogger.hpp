@@ -13,6 +13,8 @@ Q_OBJECT
     Unlogger(Events *events_, QReadWriteLock* events_lock_, QMap<int, FrameReader*> *frs_, int seek);
     uint64_t getCurrentTime() { return tc; }
     void setSeekRequest(uint64_t seek_request_) { seek_request = seek_request_; }
+    void setPause(bool pause) { paused = pause; }
+    void togglePause() { paused = !paused; }
     QMap<int, QPair<int, int> > eidx;
   public slots:
     void process();
@@ -27,6 +29,7 @@ Q_OBJECT
     Context *ctx;
     uint64_t tc = 0;
     uint64_t seek_request = 0;
+    bool paused = false;
 };
 
 #endif
