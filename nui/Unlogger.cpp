@@ -21,6 +21,11 @@ Unlogger::Unlogger(Events *events_, QReadWriteLock* events_lock_, QMap<int, Fram
     auto name = it.first.as<std::string>();
     PubSocket *sock = PubSocket::create(ctx, name);
 
+    if (strstr(getenv("BLOCK"), name.c_str()) != NULL) {
+      qDebug() << "blocking" << name.c_str();
+      continue;
+    }
+
     qDebug() << name.c_str();
 
     for (auto field: capnp::Schema::from<cereal::Event>().getFields()) {
