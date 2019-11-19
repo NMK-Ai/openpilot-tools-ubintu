@@ -17,15 +17,18 @@ Unlogger::Unlogger(Events *events_, QReadWriteLock* events_lock_, QMap<int, Fram
 
   seek_request = seek*1e9;
 
+  QStringList block = QString(getenv("BLOCK")).split(",");
+  qDebug() << "blocklist" << block;
+
   for (const auto& it : service_list) {
     auto name = it.first.as<std::string>();
-    PubSocket *sock = PubSocket::create(ctx, name);
 
-    if (strstr(getenv("BLOCK"), name.c_str()) != NULL) {
+    if (block.contains(name.c_str())) {
       qDebug() << "blocking" << name.c_str();
       continue;
     }
 
+    PubSocket *sock = PubSocket::create(ctx, name);
     qDebug() << name.c_str();
 
     for (auto field: capnp::Schema::from<cereal::Event>().getFields()) {
