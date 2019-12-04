@@ -19,7 +19,7 @@ from datetime import datetime
 # could be its own pip package, which we'd need to build and release
 from cereal import log as capnp_log
 from cereal.services import service_list
-from cereal.messaging import pub_sock
+from cereal.messaging import pub_sock, MultiplePublishersError
 from common import realtime
 
 from tools.lib.file_helpers import mkdirs_exists_ok
@@ -271,7 +271,10 @@ def unlogger_thread(command_address, forward_commands_address, data_address, run
           reset_time = True
 
       # Send message.
-      send_funcs[typ](msg_bytes)
+      try:
+        send_funcs[typ](msg_bytes)
+      except MultiplePublishersError:
+        del send_funcs[typ]
 
 def timestamp_to_s(tss):
   return time.mktime(datetime.strptime(tss, '%Y-%m-%d--%H-%M-%S').timetuple())
