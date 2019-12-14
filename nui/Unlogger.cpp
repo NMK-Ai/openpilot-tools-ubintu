@@ -20,8 +20,16 @@ Unlogger::Unlogger(Events *events_, QReadWriteLock* events_lock_, QMap<int, Fram
   QStringList block = QString(getenv("BLOCK")).split(",");
   qDebug() << "blocklist" << block;
 
+  QStringList allow = QString(getenv("ALLOW")).split(",");
+  qDebug() << "allowlist" << allow;
+
   for (const auto& it : service_list) {
     auto name = it.first.as<std::string>();
+
+    if (allow[0].size() > 0 && !allow.contains(name.c_str())) {
+      qDebug() << "not allowing" << name.c_str();
+      continue;
+    }
 
     if (block.contains(name.c_str())) {
       qDebug() << "blocking" << name.c_str();
