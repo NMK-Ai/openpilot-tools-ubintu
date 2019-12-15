@@ -138,7 +138,7 @@ AVFrame *FrameReader::toRGB(AVFrame *pFrame) {
 }
 
 uint8_t *FrameReader::get(int idx) {
-  if (!valid) return false;
+  if (!valid) return NULL;
   waitForReady();
   // TODO: one line?
   uint8_t *dat = NULL;
