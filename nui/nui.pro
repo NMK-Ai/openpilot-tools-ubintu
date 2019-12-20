@@ -21,7 +21,7 @@ PHONELIBS = $$BASEDIR"phonelibs"
 INCLUDEPATH = $$PHONELIBS/capnp-cpp/include $$PHONELIBS/yaml-cpp/include
 
 unix:!macx {
-  LIBS += -L$$PHONELIBS/capnp-cpp/x64/lib -L$$PHONELIBS/yaml-cpp/x64/lib
+  LIBS += -L$$PHONELIBS/capnp-cpp/x64/lib -L$$PHONELIBS/yaml-cpp/x64/lib -Wl,-rpath=$$PHONELIBS/capnp-cpp/x64/lib
 }
 
 macx: {
@@ -33,6 +33,5 @@ LIBS += -lcapnp -lkj -lyaml-cpp
 INCLUDEPATH += /usr/local/include
 INCLUDEPATH += $$PHONELIBS/capnp-cpp/include $$BASEDIR $$BASEDIR/cereal/messaging $$PHONELIBS/yaml-cpp/include
 LIBS += -L/usr/local/lib -lavformat -lavcodec -lavutil -lswscale
-LIBS += -lzmq -lbz2 $$BASEDIR/cereal/libmessaging.a
-
+LIBS += -lbz2 $$BASEDIR/cereal/libmessaging.a -lzmq
 
