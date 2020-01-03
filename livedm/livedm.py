@@ -55,18 +55,18 @@ if __name__ == "__main__":
         not_blink = evt.driverMonitoring.leftBlinkProb + evt.driverMonitoring.rightBlinkProb < 1
 
         if evt.driverMonitoring.leftEyeProb > 0.6:
-          cv2.line(img, (int(facePosition[0]*160+55), int(facePosition[1]*320+140)),\
-                      (int(facePosition[0]*160+65), int(facePosition[1]*320+140)), (255,255,0), 2)
-          if not_blink:
-            cv2.line(img, (int(facePosition[0]*160+59), int(facePosition[1]*320+143)),\
-                      (int(facePosition[0]*160+61), int(facePosition[1]*320+143)), (255,255,0), 2)
-
-        if evt.driverMonitoring.rightEyeProb > 0.6:
           cv2.line(img, (int(facePosition[0]*160+95), int(facePosition[1]*320+140)),\
                       (int(facePosition[0]*160+105), int(facePosition[1]*320+140)), (255,255,0), 2)
           if not_blink:
             cv2.line(img, (int(facePosition[0]*160+99), int(facePosition[1]*320+143)),\
                       (int(facePosition[0]*160+101), int(facePosition[1]*320+143)), (255,255,0), 2)
+
+        if evt.driverMonitoring.rightEyeProb > 0.6:
+          cv2.line(img, (int(facePosition[0]*160+55), int(facePosition[1]*320+140)),\
+                      (int(facePosition[0]*160+65), int(facePosition[1]*320+140)), (255,255,0), 2)
+          if not_blink:
+            cv2.line(img, (int(facePosition[0]*160+59), int(facePosition[1]*320+143)),\
+                      (int(facePosition[0]*160+61), int(facePosition[1]*320+143)), (255,255,0), 2)
 
       else:
         cv2.putText(img, 'you not found', (int(facePosition[0]*160+40), int(facePosition[1]*320+110)), cv2.FONT_ITALIC, 0.5, (64,64,64))
