@@ -47,6 +47,11 @@ Unlogger::Unlogger(Events *events_, QReadWriteLock* events_lock_, QMap<int, Fram
     }
 
     PubSocket *sock = PubSocket::create(ctx, name);
+    if (sock == NULL) {
+      qDebug() << "FAILED" << name.c_str();
+      continue;
+    }
+
     qDebug() << name.c_str();
 
     for (auto field: capnp::Schema::from<cereal::Event>().getFields()) {
