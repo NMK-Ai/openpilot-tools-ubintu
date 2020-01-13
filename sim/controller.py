@@ -12,7 +12,7 @@ from common.params import Params
 from common.realtime import Ratekeeper
 import queue
 
-pm = messaging.PubMaster(['frame', 'health', 'sensorEvents'])
+pm = messaging.PubMaster(['frame', 'health', 'sensorEvents', 'driverMonitoring'])
 
 W,H = 1164, 874
 imgq = queue.Queue()
@@ -48,11 +48,19 @@ def health_function():
     dat.valid = True
     dat.health = {
       'ignitionLine': True,
-      'hwType': "whitePanda"
+      'hwType': "whitePanda",
+      'controlsAllowed': True
     }
     pm.send('health', dat)
     rk.keep_time()
 
+def fake_driver_monitoring():
+  while 1:
+    dat = messaging.new_message()
+    dat.init('driverMonitoring')
+    dat.driverMonitoring.faceProb = 1.0
+    pm.send('driverMonitoring', dat)
+    time.sleep(0.1)
 
 def go():
   client = carla.Client("127.0.0.1", 2000)
@@ -108,6 +116,7 @@ def go():
   atexit.register(destroy)
 
   threading.Thread(target=health_function).start()
+  threading.Thread(target=fake_driver_monitoring).start()
 
   # camera loop
   rk = Ratekeeper(0.05)
