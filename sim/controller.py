@@ -12,7 +12,7 @@ from common.params import Params
 from common.realtime import Ratekeeper
 import queue
 
-pm = messaging.PubMaster(['frame', 'health', 'sensorEvents', 'driverMonitoring'])
+pm = messaging.PubMaster(['frame', 'sensorEvents'])
 
 W,H = 1164, 874
 imgq = queue.Queue()
@@ -41,6 +41,7 @@ def imu_callback(imu):
   pm.send('sensorEvents', dat)
 
 def health_function():
+  pm = messaging.PubMaster(['health'])
   rk = Ratekeeper(1.0)
   while 1:
     dat = messaging.new_message()
@@ -55,6 +56,7 @@ def health_function():
     rk.keep_time()
 
 def fake_driver_monitoring():
+  pm = messaging.PubMaster(['driverMonitoring'])
   while 1:
     dat = messaging.new_message()
     dat.init('driverMonitoring')
@@ -143,6 +145,9 @@ def go():
 if __name__ == "__main__":
   params = Params()
   params.delete("Offroad_ConnectivityNeeded")
+  from selfdrive.version import terms_version, training_version
+  params.put("HasAcceptedTerms", terms_version)
+  params.put("CompletedTrainingVersion", training_version)
 
   go()
 
