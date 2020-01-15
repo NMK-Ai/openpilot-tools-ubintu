@@ -14,7 +14,7 @@ cp = get_car_can_parser()
 packer = CANPacker("honda_civic_touring_2016_can_generated")
 rpacker = CANPacker("acura_ilx_2016_nidec")
 
-def can_function(pm, speed, idx, engage):
+def can_function(pm, speed, angle, idx, engage):
   msg = []
   msg.append(packer.make_can_msg("ENGINE_DATA", 0, {"XMISSION_SPEED": speed}, idx))
   msg.append(packer.make_can_msg("WHEEL_SPEEDS", 0,
@@ -37,7 +37,7 @@ def can_function(pm, speed, idx, engage):
   msg.append(packer.make_can_msg("GAS_PEDAL_2", 0, {}, idx))
   msg.append(packer.make_can_msg("SEATBELT_STATUS", 0, {"SEATBELT_DRIVER_LATCHED": 1}, idx))
   msg.append(packer.make_can_msg("STEER_STATUS", 0, {}, idx))
-  msg.append(packer.make_can_msg("STEERING_SENSORS", 0, {}, idx))
+  msg.append(packer.make_can_msg("STEERING_SENSORS", 0, {"STEER_ANGLE": angle}, idx))
   msg.append(packer.make_can_msg("POWERTRAIN_DATA", 0, {}, idx))
   msg.append(packer.make_can_msg("VSA_STATUS", 0, {}, idx))
   msg.append(packer.make_can_msg("STANDSTILL", 0, {}, idx))
@@ -58,7 +58,7 @@ def can_function(pm, speed, idx, engage):
   if idx%5 == 0:
     msg.append(rpacker.make_can_msg("RADAR_DIAGNOSTIC", 1, {"RADAR_STATE": 0x79}, -1))
     for i in range(16):
-      msg.append(rpacker.make_can_msg("TRACK_%d" % i, 1, {}, -1))
+      msg.append(rpacker.make_can_msg("TRACK_%d" % i, 1, {"LONG_DIST": 255.5}, -1))
 
   # fill in the rest for fingerprint
   done = set([x[0] for x in msg])

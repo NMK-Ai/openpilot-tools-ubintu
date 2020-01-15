@@ -70,7 +70,6 @@ def fake_driver_monitoring():
     pm.send('driverMonitoring', dat)
     time.sleep(0.1)
 
-
 def go():
   client = carla.Client("127.0.0.1", 2000)
   client.set_timeout(5.0)
@@ -130,20 +129,20 @@ def go():
   # can loop
   sendcan = messaging.sub_sock('sendcan')
   rk = Ratekeeper(100)
+  steer_angle = 0
   while 1:
     vel = vehicle.get_velocity()
     speed = math.sqrt(vel.x**2 + vel.y**2 + vel.z**2)
 
-    can_function(pm, speed, rk.frame, rk.frame%500 == 499)
+    can_function(pm, speed, steer_angle, rk.frame, rk.frame%500 == 499)
     if rk.frame%5 == 0:
       throttle, brake, steer = sendcan_function(sendcan)
-      vc = carla.VehicleControl(throttle=throttle, steer=steer, brake=brake)
+      steer_angle += steer/10000.0 # torque
+      vc = carla.VehicleControl(throttle=throttle, steer=steer_angle, brake=brake)
       vehicle.apply_control(vc)
-      print(speed, vc)
+      print(speed, steer_angle, vc)
 
     rk.keep_time()
-
-
 
 if __name__ == "__main__":
   params = Params()
