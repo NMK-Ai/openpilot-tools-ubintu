@@ -10,19 +10,25 @@ import random
 import cereal.messaging as messaging
 from common.params import Params
 from common.realtime import Ratekeeper
+from can import can_function, sendcan_function
 import queue
 
-pm = messaging.PubMaster(['frame', 'sensorEvents'])
+pm = messaging.PubMaster(['frame', 'sensorEvents', 'can'])
 
 W,H = 1164, 874
-imgq = queue.Queue()
 
 def cam_callback(image):
   img = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
   img = np.reshape(img, (H, W, 4))
   img = img[:, :, [0,1,2]].copy()
-  print(image.frame, time.time())
-  imgq.put((image.frame, img))
+
+  dat = messaging.new_message()
+  dat.init('frame')
+  dat.frame = {
+    "frameId": image.frame,
+    "image": img.tostring(),
+  }
+  pm.send('frame', dat)
 
 def imu_callback(imu):
   #print(imu, imu.accelerometer)
@@ -64,6 +70,7 @@ def fake_driver_monitoring():
     pm.send('driverMonitoring', dat)
     time.sleep(0.1)
 
+
 def go():
   client = carla.Client("127.0.0.1", 2000)
   client.set_timeout(5.0)
@@ -93,7 +100,7 @@ def go():
 
   vehicle_bp = random.choice(blueprint_library.filter('vehicle.bmw.*'))
   vehicle = world.spawn_actor(vehicle_bp, random.choice(world_map.get_spawn_points()))
-  vehicle.set_autopilot(True)
+  #vehicle.set_autopilot(True)
 
   blueprint = blueprint_library.find('sensor.camera.rgb')
   blueprint.set_attribute('image_size_x', str(W))
@@ -120,27 +127,23 @@ def go():
   threading.Thread(target=health_function).start()
   threading.Thread(target=fake_driver_monitoring).start()
 
-  # camera loop
-  rk = Ratekeeper(0.05)
+  # can loop
+  sendcan = messaging.sub_sock('sendcan')
+  rk = Ratekeeper(100)
   while 1:
-    # frame
-    frame,img = imgq.get()
-    while imgq.qsize() > 0:
-      print("DROPPED FRAME: %d" % frame)
-      frame,img = imgq.get()
-    dat = messaging.new_message()
-    dat.init('frame')
-    dat.frame = {
-      "frameId": frame,
-      "image": img.tostring(),
-    }
-    pm.send('frame', dat)
-
     vel = vehicle.get_velocity()
     speed = math.sqrt(vel.x**2 + vel.y**2 + vel.z**2)
 
-    #vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=0.0, brake=0.0))
-    rk.monitor_time()
+    can_function(pm, speed, rk.frame, rk.frame%500 == 499)
+    if rk.frame%5 == 0:
+      throttle, brake, steer = sendcan_function(sendcan)
+      vc = carla.VehicleControl(throttle=throttle, steer=steer, brake=brake)
+      vehicle.apply_control(vc)
+      print(speed, vc)
+
+    rk.keep_time()
+
+
 
 if __name__ == "__main__":
   params = Params()
