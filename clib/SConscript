@@ -1,0 +1,10 @@
+Import('env')
+
+#env.Library('libreader', ['FrameReader.cpp'])
+
+# is scons python3?
+env.Command(['pyframereader.cpp'],
+  ['pyframereader.pyx'],
+  'cd tools/clib && python -c \'from Cython.Build import cythonize; cythonize("pyframereader.pyx")\'')
+env.SharedLibrary(File('framereader.so'), ['pyframereader.cpp', 'FrameReader.cpp'])
+

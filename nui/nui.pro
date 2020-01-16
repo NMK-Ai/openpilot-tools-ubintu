@@ -7,8 +7,8 @@ TARGET = nui
 INCLUDEPATH += .
 
 # Input
-SOURCES += main.cpp FileReader.cpp Unlogger.cpp FrameReader.cpp
-HEADERS = FileReader.hpp Unlogger.hpp FrameReader.hpp
+SOURCES += main.cpp FileReader.cpp Unlogger.cpp ../clib/FrameReader.cpp
+HEADERS = FileReader.hpp Unlogger.hpp ../clib/FrameReader.hpp
 
 CONFIG += c++14
 CONFIG += debug
@@ -18,7 +18,7 @@ QT += widgets network core
 BASEDIR = "../../"
 PHONELIBS = $$BASEDIR"phonelibs"
 
-INCLUDEPATH = $$PHONELIBS/capnp-cpp/include $$PHONELIBS/yaml-cpp/include
+INCLUDEPATH = $$PHONELIBS/capnp-cpp/include $$PHONELIBS/yaml-cpp/include ../clib/
 
 unix:!macx {
   LIBS += -L$$PHONELIBS/capnp-cpp/x64/lib -L$$PHONELIBS/yaml-cpp/x64/lib -Wl,-rpath=$$PHONELIBS/capnp-cpp/x64/lib
