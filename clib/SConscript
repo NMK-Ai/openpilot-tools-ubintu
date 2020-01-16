@@ -1,10 +1,8 @@
 Import('env')
+from sysconfig import get_paths
+env['CPPPATH'] += [get_paths()['include']]
 
-#env.Library('libreader', ['FrameReader.cpp'])
-
-# is scons python3?
-env.Command(['pyframereader.cpp'],
-  ['pyframereader.pyx'],
-  'cd tools/clib && python -c \'from Cython.Build import cythonize; cythonize("pyframereader.pyx")\'')
-env.SharedLibrary(File('framereader.so'), ['pyframereader.cpp', 'FrameReader.cpp'])
+from Cython.Build import cythonize
+cythonize("cframereader.pyx")
+env.SharedLibrary(File('cframereader.so'), ['cframereader.cpp', 'FrameReader.cpp'], LIBS=['avformat', 'avcodec', 'avutil', 'swscale'])
 
